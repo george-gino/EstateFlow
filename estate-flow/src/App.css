@@ -1,3 +1,6 @@
+/* Import EstateFlow Color System */
+@import './styles/colors.css';
+
 .App {
   text-align: left;
 }

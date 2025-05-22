@@ -1,7 +1,14 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './HomePage.css';
 
 const HomePage = () => {
+  const navigate = useNavigate();
+
+  const handleGetStarted = () => {
+    navigate('/dashboard');
+  };
+
   return (
     <div className="homepage">
       {/* Header */}
@@ -15,7 +22,7 @@ const HomePage = () => {
               <a href="#features">Features</a>
               <a href="#pricing">Pricing</a>
               <a href="#contact">Contact</a>
-              <button className="btn btn-primary">Get Started</button>
+              <button className="btn btn-primary" onClick={handleGetStarted}>Get Started</button>
             </nav>
           </div>
         </div>
@@ -31,7 +38,7 @@ const HomePage = () => {
                 Connect with tenants, manage properties, and grow your business with our comprehensive property management platform.
               </p>
               <div className="hero-buttons">
-                <button className="btn btn-primary btn-large">Start Free Trial</button>
+                <button className="btn btn-primary btn-large" onClick={handleGetStarted}>Start Free Trial</button>
                 <button className="btn btn-secondary btn-large">Schedule Demo</button>
               </div>
               <div className="hero-stats">
@@ -130,7 +137,7 @@ const HomePage = () => {
           <div className="cta-content">
             <h2>Ready to Transform Your Property Management?</h2>
             <p>Join thousands of property managers who trust EstateFlow to grow their business.</p>
-            <button className="btn btn-primary btn-large">Start Your Free Trial</button>
+            <button className="btn btn-primary btn-large" onClick={handleGetStarted}>Start Your Free Trial</button>
             <p className="cta-note">No credit card required • 14-day free trial</p>
           </div>
         </div>
