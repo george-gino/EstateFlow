@@ -1,13 +1,38 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
+import PropertyModal from './PropertyModal';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
+  const [isPropertyModalOpen, setIsPropertyModalOpen] = useState(false);
+  const [properties, setProperties] = useState([]);
 
   const handleLogout = () => {
     navigate('/');
+  };
+
+  const handleOpenPropertyModal = () => {
+    setIsPropertyModalOpen(true);
+  };
+
+  const handleClosePropertyModal = () => {
+    setIsPropertyModalOpen(false);
+  };
+
+  const handleSaveProperty = (propertyData) => {
+    // Add the new property to the properties list
+    const newProperty = {
+      id: Date.now(),
+      ...propertyData,
+      createdAt: new Date().toISOString()
+    };
+    
+    setProperties(prev => [...prev, newProperty]);
+    console.log('New property added:', newProperty);
+    
+    // You can add additional logic here like saving to a backend API
   };
 
   return (
@@ -104,7 +129,7 @@ const Dashboard = () => {
                 <span>📋</span>
                 Quick Actions
               </button>
-              <button className="btn btn-primary">
+              <button className="btn btn-primary" onClick={handleOpenPropertyModal}>
                 <span>➕</span>
                 Add Property
               </button>
@@ -156,44 +181,38 @@ const Dashboard = () => {
               <div className="dashboard-grid">
                 <div className="dashboard-card">
                   <div className="card-header">
-                    <h3>Recent Properties</h3>
-                    <button className="btn btn-small">View All</button>
+                    <h3>Your Properties</h3>
+                    <button className="btn btn-small" onClick={handleOpenPropertyModal}>Add New</button>
                   </div>
                   <div className="card-content">
                     <div className="property-list">
-                      <div className="property-item">
-                        <div className="property-image-small"></div>
-                        <div className="property-details">
-                          <h4>Sunset Apartments</h4>
-                          <p>24 units • 95% occupied</p>
-                          <span className="revenue">$45,000/mo</span>
+                      {properties.length > 0 ? (
+                        properties.map((property) => (
+                          <div key={property.id} className="property-item">
+                            <div className="property-image-small"></div>
+                            <div className="property-details">
+                              <h4>{property.name}</h4>
+                              <p>{property.numUnits} units • {property.address}</p>
+                              <span className="revenue">
+                                ${property.units.reduce((total, unit) => total + (parseInt(unit.rent) || 0), 0).toLocaleString()}/mo
+                              </span>
+                            </div>
+                            <div className="property-status">
+                              <span className="status-badge success">Active</span>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="empty-state">
+                          <div className="empty-icon">🏢</div>
+                          <h4>No properties yet</h4>
+                          <p>Click "Add Property" to get started</p>
+                          <button className="btn btn-primary" onClick={handleOpenPropertyModal}>
+                            <span>➕</span>
+                            Add Your First Property
+                          </button>
                         </div>
-                        <div className="property-status">
-                          <span className="status-badge success">Active</span>
-                        </div>
-                      </div>
-                      <div className="property-item">
-                        <div className="property-image-small"></div>
-                        <div className="property-details">
-                          <h4>Downtown Plaza</h4>
-                          <p>18 units • 89% occupied</p>
-                          <span className="revenue">$38,500/mo</span>
-                        </div>
-                        <div className="property-status">
-                          <span className="status-badge success">Active</span>
-                        </div>
-                      </div>
-                      <div className="property-item">
-                        <div className="property-image-small"></div>
-                        <div className="property-details">
-                          <h4>Garden Heights</h4>
-                          <p>32 units • 91% occupied</p>
-                          <span className="revenue">$52,800/mo</span>
-                        </div>
-                        <div className="property-status">
-                          <span className="status-badge success">Active</span>
-                        </div>
-                      </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -252,6 +271,13 @@ const Dashboard = () => {
           )}
         </div>
       </main>
+
+      {/* Property Modal */}
+      <PropertyModal 
+        isOpen={isPropertyModalOpen}
+        onClose={handleClosePropertyModal}
+        onSave={handleSaveProperty}
+      />
     </div>
   );
 };
