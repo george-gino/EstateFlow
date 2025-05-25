@@ -29,9 +29,11 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   width: 90%;
   max-width: 900px;
-  max-height: 90vh;
+  max-height: 95vh;
   overflow: hidden;
   animation: slideIn 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
 }
 
 @keyframes slideIn {
@@ -86,6 +88,7 @@
   padding: 20px 32px;
   background-color: #f9fafb;
   border-bottom: 1px solid #e5e7eb;
+  position: relative;
 }
 
 .progress-step {
@@ -96,6 +99,9 @@
   font-weight: 500;
   flex: 1;
   position: relative;
+  z-index: 2;
+  background-color: #f9fafb;
+  padding: 4px 0;
 }
 
 .progress-step.active {
@@ -113,6 +119,8 @@
   justify-content: center;
   font-weight: 600;
   font-size: 14px;
+  position: relative;
+  z-index: 3;
 }
 
 .progress-step.active span {
@@ -124,11 +132,12 @@
   content: '';
   position: absolute;
   top: 50%;
+  left: 50%;
   right: -50%;
-  width: 100%;
   height: 2px;
   background-color: #e5e7eb;
   transform: translateY(-50%);
+  z-index: 1;
 }
 
 .progress-step.active:not(:last-child)::after {
@@ -137,8 +146,9 @@
 
 .modal-body {
   padding: 32px;
-  max-height: calc(90vh - 200px);
   overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 .step-content h3 {
@@ -199,7 +209,7 @@
 .units-grid {
   display: grid;
   gap: 24px;
-  max-height: 500px;
+  max-height: 60vh;
   overflow-y: auto;
   padding-right: 8px;
 }
@@ -272,6 +282,10 @@
   padding: 24px 32px;
   border-top: 1px solid #e5e7eb;
   background-color: #f9fafb;
+  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
 }
 
 .footer-actions {
@@ -334,6 +348,7 @@
   .modal-content {
     width: 95%;
     margin: 20px;
+    max-height: 90vh;
   }
   
   .modal-header,
@@ -361,7 +376,7 @@
   }
   
   .units-grid {
-    max-height: 400px;
+    max-height: 50vh;
   }
 }
 

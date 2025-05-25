@@ -9,6 +9,17 @@ const Dashboard = () => {
   const [isPropertyModalOpen, setIsPropertyModalOpen] = useState(false);
   const [properties, setProperties] = useState([]);
 
+  // Calculate dynamic stats from actual properties
+  const totalProperties = properties.length;
+  const totalUnits = properties.reduce((sum, property) => sum + property.numUnits, 0);
+  const occupiedUnits = properties.reduce((sum, property) => 
+    sum + property.units.filter(unit => unit.tenant !== null).length, 0
+  );
+  const totalRevenue = properties.reduce((sum, property) => 
+    sum + property.units.reduce((unitSum, unit) => unitSum + (parseInt(unit.rent) || 0), 0), 0
+  );
+  const occupancyRate = totalUnits > 0 ? (occupiedUnits / totalUnits * 100).toFixed(1) : 0;
+
   const handleLogout = () => {
     navigate('/');
   };
@@ -35,13 +46,26 @@ const Dashboard = () => {
     // You can add additional logic here like saving to a backend API
   };
 
+  const handleDeleteProperty = (propertyId, propertyName) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${propertyName}"?\n\nThis action cannot be undone and will remove all associated units and tenant information.`
+    );
+    
+    if (confirmed) {
+      setProperties(prev => prev.filter(property => property.id !== propertyId));
+      console.log('Property deleted:', propertyId);
+      
+      // You can add additional logic here like calling a backend API to delete
+    }
+  };
+
   return (
     <div className="dashboard">
       {/* Sidebar */}
       <aside className="dashboard-sidebar">
         <div className="sidebar-header">
           <h2 className="sidebar-logo">EstateFlow</h2>
-          <p className="sidebar-user">Welcome back, John</p>
+          <p className="sidebar-user">Property Manager</p>
         </div>
 
         <nav className="sidebar-nav">
@@ -146,33 +170,30 @@ const Dashboard = () => {
                 <div className="stat-card">
                   <div className="stat-icon properties">🏢</div>
                   <div className="stat-info">
-                    <h3>12</h3>
+                    <h3>{totalProperties}</h3>
                     <p>Total Properties</p>
-                    <span className="stat-change positive">+2 this month</span>
                   </div>
                 </div>
                 <div className="stat-card">
                   <div className="stat-icon tenants">👥</div>
                   <div className="stat-info">
-                    <h3>248</h3>
-                    <p>Active Tenants</p>
-                    <span className="stat-change positive">+12 this month</span>
+                    <h3>{totalUnits}</h3>
+                    <p>Total Units</p>
+                    {occupiedUnits > 0 && <span className="stat-change positive">{occupiedUnits} occupied</span>}
                   </div>
                 </div>
                 <div className="stat-card">
                   <div className="stat-icon revenue">💰</div>
                   <div className="stat-info">
-                    <h3>$156,780</h3>
+                    <h3>${totalRevenue.toLocaleString()}</h3>
                     <p>Monthly Revenue</p>
-                    <span className="stat-change positive">+8.5% vs last month</span>
                   </div>
                 </div>
                 <div className="stat-card">
                   <div className="stat-icon occupancy">📊</div>
                   <div className="stat-info">
-                    <h3>94.2%</h3>
+                    <h3>{occupancyRate}%</h3>
                     <p>Occupancy Rate</p>
-                    <span className="stat-change positive">+2.1% vs last month</span>
                   </div>
                 </div>
               </div>
@@ -197,8 +218,17 @@ const Dashboard = () => {
                                 ${property.units.reduce((total, unit) => total + (parseInt(unit.rent) || 0), 0).toLocaleString()}/mo
                               </span>
                             </div>
-                            <div className="property-status">
-                              <span className="status-badge success">Active</span>
+                            <div className="property-actions">
+                              <div className="property-status">
+                                <span className="status-badge success">Active</span>
+                              </div>
+                              <button 
+                                className="btn-delete" 
+                                onClick={() => handleDeleteProperty(property.id, property.name)}
+                                title="Delete Property"
+                              >
+                                🗑️
+                              </button>
                             </div>
                           </div>
                         ))
@@ -219,40 +249,57 @@ const Dashboard = () => {
 
                 <div className="dashboard-card">
                   <div className="card-header">
-                    <h3>Recent Activity</h3>
-                    <button className="btn btn-small">View All</button>
+                    <h3>Property Insights</h3>
+                    <button className="btn btn-small">View Details</button>
                   </div>
                   <div className="card-content">
-                    <div className="activity-list">
-                      <div className="activity-item">
-                        <div className="activity-icon maintenance">🔧</div>
-                        <div className="activity-details">
-                          <p><strong>Maintenance request</strong> - Unit 4B heating issue</p>
-                          <span className="activity-time">2 hours ago</span>
+                    {properties.length > 0 ? (
+                      <div className="insights-list">
+                        <div className="insight-item">
+                          <div className="insight-icon">📊</div>
+                          <div className="insight-details">
+                            <p><strong>Portfolio Overview</strong></p>
+                            <span className="insight-description">{totalProperties} properties with {totalUnits} total units</span>
+                          </div>
                         </div>
+                        
+                        {occupancyRate > 0 && (
+                          <div className="insight-item">
+                            <div className="insight-icon">🏠</div>
+                            <div className="insight-details">
+                              <p><strong>Occupancy Status</strong></p>
+                              <span className="insight-description">{occupiedUnits} of {totalUnits} units occupied ({occupancyRate}%)</span>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {totalRevenue > 0 && (
+                          <div className="insight-item">
+                            <div className="insight-icon">💰</div>
+                            <div className="insight-details">
+                              <p><strong>Revenue Stream</strong></p>
+                              <span className="insight-description">${totalRevenue.toLocaleString()} monthly income potential</span>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {properties.length > 0 && (
+                          <div className="insight-item">
+                            <div className="insight-icon">📈</div>
+                            <div className="insight-details">
+                              <p><strong>Portfolio Growth</strong></p>
+                              <span className="insight-description">Recently added: {properties[properties.length - 1]?.name || 'No properties yet'}</span>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div className="activity-item">
-                        <div className="activity-icon payment">💳</div>
-                        <div className="activity-details">
-                          <p><strong>Payment received</strong> - Sarah Johnson ($2,100)</p>
-                          <span className="activity-time">4 hours ago</span>
-                        </div>
+                    ) : (
+                      <div className="empty-insights">
+                        <div className="empty-icon">📊</div>
+                        <h4>No insights yet</h4>
+                        <p>Add your first property to see portfolio insights and analytics</p>
                       </div>
-                      <div className="activity-item">
-                        <div className="activity-icon tenant">👤</div>
-                        <div className="activity-details">
-                          <p><strong>New tenant</strong> - Michael Brown signed lease</p>
-                          <span className="activity-time">1 day ago</span>
-                        </div>
-                      </div>
-                      <div className="activity-item">
-                        <div className="activity-icon property">🏢</div>
-                        <div className="activity-details">
-                          <p><strong>Property updated</strong> - Oak Street Complex photos</p>
-                          <span className="activity-time">2 days ago</span>
-                        </div>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>
