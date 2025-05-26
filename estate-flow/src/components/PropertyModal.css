@@ -5,13 +5,20 @@
   right: 0;
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  animation: fadeIn 0.2s ease-out;
+  animation: fadeIn 0.3s ease-out;
+  padding: 20px;
+  /* Hide scrollbars */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.modal-overlay::-webkit-scrollbar {
+  display: none;
 }
 
 @keyframes fadeIn {
@@ -149,6 +156,14 @@
   overflow-y: auto;
   flex: 1;
   min-height: 0;
+  /* Hide scrollbars */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-behavior: smooth;
+}
+
+.modal-body::-webkit-scrollbar {
+  display: none;
 }
 
 .step-content h3 {
@@ -212,6 +227,14 @@
   max-height: 60vh;
   overflow-y: auto;
   padding-right: 8px;
+  /* Hide scrollbars */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-behavior: smooth;
+}
+
+.units-grid::-webkit-scrollbar {
+  display: none;
 }
 
 .unit-card {

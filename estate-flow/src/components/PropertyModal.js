@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './PropertyModal.css';
 
-const PropertyModal = ({ isOpen, onClose, onSave }) => {
+const PropertyModal = ({ isOpen, onClose, onSave, editingProperty }) => {
   const [propertyData, setPropertyData] = useState({
     name: '',
     address: '',
@@ -18,6 +18,35 @@ const PropertyModal = ({ isOpen, onClose, onSave }) => {
   });
 
   const [currentStep, setCurrentStep] = useState(1); // 1: Property Details, 2: Unit Details
+
+  // Initialize form data when editing property
+  React.useEffect(() => {
+    if (editingProperty) {
+      setPropertyData({
+        name: editingProperty.name,
+        address: editingProperty.address,
+        numUnits: editingProperty.numUnits,
+        units: editingProperty.units.map(unit => ({ ...unit })) // Deep copy units
+      });
+    } else {
+      // Reset to default when creating new property
+      setPropertyData({
+        name: '',
+        address: '',
+        numUnits: 1,
+        units: [{ 
+          id: 1, 
+          number: '1', 
+          bedrooms: 1, 
+          bathrooms: 1, 
+          squareFeet: '', 
+          rent: '',
+          tenant: null
+        }]
+      });
+    }
+    setCurrentStep(1);
+  }, [editingProperty, isOpen]);
 
   // Handle property basic info changes
   const handlePropertyChange = (field, value) => {
@@ -36,9 +65,12 @@ const PropertyModal = ({ isOpen, onClose, onSave }) => {
           // Keep existing unit data
           newUnits.push(propertyData.units[i]);
         } else {
-          // Create new unit
+          // Create new unit with unique ID
+          const newUnitId = editingProperty 
+            ? Math.max(...propertyData.units.map(u => u.id), 0) + i + 1
+            : i + 1;
           newUnits.push({
-            id: i + 1,
+            id: newUnitId,
             number: (i + 1).toString(),
             bedrooms: 1,
             bathrooms: 1,
@@ -132,7 +164,7 @@ const PropertyModal = ({ isOpen, onClose, onSave }) => {
     <div className="modal-overlay" onClick={handleClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Add New Property</h2>
+          <h2>{editingProperty ? 'Edit Property' : 'Add New Property'}</h2>
           <button className="modal-close" onClick={handleClose}>×</button>
         </div>
 
@@ -298,7 +330,9 @@ const PropertyModal = ({ isOpen, onClose, onSave }) => {
           ) : (
             <div className="footer-actions">
               <button className="btn btn-secondary" onClick={() => setCurrentStep(1)}>Back</button>
-              <button className="btn btn-primary" onClick={handleSave}>Create Property</button>
+              <button className="btn btn-primary" onClick={handleSave}>
+                {editingProperty ? 'Update Property' : 'Create Property'}
+              </button>
             </div>
           )}
         </div>
