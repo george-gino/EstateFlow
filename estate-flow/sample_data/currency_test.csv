@@ -1,0 +1,5 @@
+Property Name,Property Address,Unit Number,Bedrooms,Bathrooms,Monthly Rent,Tenant Name
+Test Property,123 Test Street,1,2,1,$2500.00,John Doe
+Test Property,123 Test Street,2,1,1,$1800,Jane Smith
+Test Property,123 Test Street,3,3,2,3200.50,Bob Johnson
+Test Property,123 Test Street,4,2,1,$2000.00, 

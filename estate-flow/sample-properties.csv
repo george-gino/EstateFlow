@@ -1,0 +1,12 @@
+Property Name,Property Address,Unit Number,Bedrooms,Bathrooms,Square Feet,Monthly Rent,Tenant Name,Tenant Email,Tenant Phone,Lease Start,Lease End
+Sunset Apartments,123 Sunset Blvd Los Angeles CA 90210,101,2,2,950,2200,John Smith,john.smith@email.com,(555) 123-4567,2024-01-01,2024-12-31
+Sunset Apartments,123 Sunset Blvd Los Angeles CA 90210,102,2,2,950,2200,Sarah Johnson,sarah.j@email.com,(555) 987-6543,2024-02-15,2025-02-14
+Sunset Apartments,123 Sunset Blvd Los Angeles CA 90210,103,1,1,750,1800,,,,
+Sunset Apartments,123 Sunset Blvd Los Angeles CA 90210,104,3,2,1200,2800,Mike Davis,mike.davis@email.com,(555) 456-7890,2023-12-01,2024-11-30
+Downtown Plaza,456 Main Street Downtown CA 90213,1A,1,1,650,1600,Lisa Chen,lisa.chen@email.com,(555) 234-5678,2024-03-01,2025-02-28
+Downtown Plaza,456 Main Street Downtown CA 90213,1B,1,1,650,1600,,,,
+Downtown Plaza,456 Main Street Downtown CA 90213,2A,2,1,850,2000,Robert Wilson,r.wilson@email.com,(555) 345-6789,2024-01-15,2025-01-14
+Downtown Plaza,456 Main Street Downtown CA 90213,2B,2,1,850,2000,Amanda Brown,amanda.b@email.com,(555) 567-8901,2024-04-01,2025-03-31
+Ocean View Towers,789 Ocean Ave Malibu CA 90265,301,3,3,1400,4500,David Garcia,david.g@email.com,(555) 678-9012,2024-02-01,2025-01-31
+Ocean View Towers,789 Ocean Ave Malibu CA 90265,302,3,3,1400,4500,,,,
+Ocean View Towers,789 Ocean Ave Malibu CA 90265,303,2,2,1100,3500,Jennifer Martinez,jen.martinez@email.com,(555) 789-0123,2024-03-15,2025-03-14 

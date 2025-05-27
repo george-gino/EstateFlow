@@ -268,7 +268,7 @@
 /* Stats Grid */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: var(--spacing-lg);
   margin-bottom: var(--spacing-2xl);
 }
@@ -283,6 +283,7 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-lg);
+  min-width: 0;
 }
 
 .stat-card:hover {
@@ -317,11 +318,19 @@
   background: linear-gradient(135deg, var(--accent-blue) 0%, var(--primary-600) 100%);
 }
 
+.stat-info {
+  flex: 1;
+  min-width: 0;
+}
+
 .stat-info h3 {
   font-size: 2rem;
   font-weight: var(--font-extrabold);
   color: var(--text-primary);
   margin-bottom: var(--spacing-xs);
+  word-break: break-word;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
 }
 
 .stat-info p {
@@ -630,13 +639,16 @@
   }
   
   .stats-grid {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  }
+  
+  .stat-info h3 {
+    font-size: 1.75rem;
   }
 }
 
 @media (max-width: 768px) {
   .dashboard-sidebar {
-    width: 250px;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
   }
@@ -647,13 +659,13 @@
   
   .header-content {
     flex-direction: column;
-    gap: var(--spacing-md);
     align-items: flex-start;
+    gap: var(--spacing-md);
   }
   
   .header-actions {
+    flex-direction: column;
     width: 100%;
-    justify-content: flex-start;
   }
   
   .dashboard-content {
@@ -661,7 +673,12 @@
   }
   
   .stats-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+  }
+  
+  .stat-info h3 {
+    font-size: 1.5rem;
   }
 }
 
@@ -1053,40 +1070,464 @@
   max-width: 400px;
 }
 
-/* Responsive Design for New Pages */
+/* Expandable Properties Interface */
+.properties-expandable-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.property-expandable-card {
+  background: var(--bg-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-light);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.property-expandable-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.property-expandable-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-xl);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.property-expandable-header:hover {
+  background-color: var(--bg-gray-light);
+}
+
+.property-expand-indicator {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.expand-arrow {
+  font-size: 14px;
+  color: var(--text-secondary);
+  transition: transform 0.3s ease;
+}
+
+.expand-arrow.expanded {
+  transform: rotate(90deg);
+}
+
+.property-image-medium {
+  width: 80px;
+  height: 80px;
+  background: var(--gradient-primary);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.property-summary {
+  flex: 1;
+}
+
+.property-summary h3 {
+  font-size: 1.3rem;
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.property-address {
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-sm);
+  font-size: 0.95rem;
+}
+
+.property-quick-stats {
+  display: flex;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.quick-stat {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--bg-gray-light);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+}
+
+.quick-stat.revenue {
+  background: var(--success-100);
+  color: var(--success-600);
+}
+
+.property-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+  background-color: var(--bg-gray-light);
+  transform: scale(1.1);
+}
+
+.btn-icon.btn-danger:hover {
+  background-color: var(--danger-100);
+  color: var(--danger-600);
+}
+
+/* Units Grid */
+.property-units-expanded {
+  padding: var(--spacing-xl);
+  border-top: 1px solid var(--border-light);
+  background: var(--bg-gray-light);
+}
+
+.units-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.unit-card {
+  background: var(--bg-white);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.unit-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.unit-card.selected {
+  border-color: var(--primary-500);
+  box-shadow: var(--shadow-primary);
+}
+
+.unit-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.unit-number-large {
+  font-size: 1.5rem;
+  font-weight: var(--font-bold);
+  color: var(--primary-600);
+}
+
+.unit-status-indicator {
+  font-size: 1.2rem;
+}
+
+.status-occupied-dot {
+  color: var(--success-500);
+}
+
+.status-vacant-dot {
+  color: var(--warning-500);
+}
+
+.unit-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.unit-specs {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.unit-rent-display {
+  font-size: 1.2rem;
+  font-weight: var(--font-bold);
+  color: var(--success-600);
+}
+
+.unit-tenant-preview {
+  font-size: 0.9rem;
+}
+
+.tenant-name-preview {
+  color: var(--text-primary);
+  font-weight: var(--font-medium);
+}
+
+.vacant-preview {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Unit Details Panel */
+.unit-details-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl);
+}
+
+.unit-details-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+.unit-details-content {
+  position: relative;
+  background: var(--bg-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.unit-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-xl);
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg-gray-light);
+}
+
+.unit-details-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+}
+
+.btn-close:hover {
+  background: var(--bg-white);
+  color: var(--text-primary);
+}
+
+.unit-details-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+.unit-property-info h4 {
+  margin: 0 0 var(--spacing-xs) 0;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.unit-property-info p {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.unit-specifications h4,
+.unit-tenant-info h4 {
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.spec-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-md);
+}
+
+.spec-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.spec-item label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: var(--font-medium);
+}
+
+.spec-item span {
+  font-size: 1rem;
+  color: var(--text-primary);
+  font-weight: var(--font-semibold);
+}
+
+.rent-highlight {
+  color: var(--success-600) !important;
+  font-size: 1.2rem !important;
+}
+
+.tenant-details {
+  display: flex;
+  gap: var(--spacing-lg);
+  align-items: flex-start;
+}
+
+.tenant-avatar-large {
+  width: 60px;
+  height: 60px;
+  background: var(--gradient-primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  font-weight: var(--font-bold);
+  flex-shrink: 0;
+}
+
+.tenant-info-detailed {
+  flex: 1;
+}
+
+.tenant-info-detailed h5 {
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: 1.2rem;
+  color: var(--text-primary);
+}
+
+.tenant-contact-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.contact-icon {
+  font-size: 1rem;
+}
+
+.lease-info {
+  padding: var(--spacing-md);
+  background: var(--bg-gray-light);
+  border-radius: var(--radius-md);
+}
+
+.lease-dates {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.lease-icon {
+  font-size: 1rem;
+}
+
+.vacant-unit-info {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--text-secondary);
+}
+
+.vacant-icon {
+  font-size: 3rem;
+  margin-bottom: var(--spacing-md);
+  opacity: 0.6;
+}
+
+.vacant-unit-info p {
+  margin-bottom: var(--spacing-lg);
+}
+
+/* Responsive Design for New Components */
 @media (max-width: 768px) {
-  .page-header {
+  .units-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+
+  .property-expandable-header {
     flex-direction: column;
-    gap: var(--spacing-lg);
     align-items: stretch;
+    gap: var(--spacing-md);
   }
-  
-  .property-card-header {
-    flex-direction: column;
-    text-align: center;
-  }
-  
-  .property-image-large {
-    width: 100px;
-    height: 100px;
+
+  .property-image-medium {
     align-self: center;
   }
-  
-  .property-stats {
+
+  .property-quick-stats {
     justify-content: center;
   }
-  
-  .tenant-card {
+
+  .unit-details-panel {
+    padding: var(--spacing-md);
+  }
+
+  .unit-details-content {
+    max-height: 95vh;
+  }
+
+  .spec-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tenant-details {
     flex-direction: column;
     text-align: center;
-  }
-  
-  .tenant-rent {
-    text-align: center;
-  }
-  
-  .tenant-stats {
-    justify-content: center;
   }
 }
 

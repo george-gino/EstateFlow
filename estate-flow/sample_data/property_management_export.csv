@@ -1,0 +1,13 @@
+Property Title,Full Address,Unit ID,Number of Bedrooms,Number of Bathrooms,Square Footage,Monthly Rental Price,Occupant Name,Contact Email,Contact Phone,Tenancy Start,Tenancy End
+Oceanview Heights,999 Coast Highway Malibu CA 90265,PH1,3,3,1800,4500,Victoria Stone,vstone@email.com,310-555-0001,2023-01-01,2023-12-31
+Oceanview Heights,999 Coast Highway Malibu CA 90265,PH2,3,3,1800,4500,,,,,
+Oceanview Heights,999 Coast Highway Malibu CA 90265,A301,2,2,1200,3200,Benjamin Foster,bfoster@email.com,310-555-0002,2023-02-01,2024-01-31
+Oceanview Heights,999 Coast Highway Malibu CA 90265,A302,2,2,1200,3200,Charlotte Webb,cwebb@email.com,310-555-0003,2023-01-15,2024-01-14
+Metro Gardens,777 Urban Street Chicago IL 60601,1,1,1,700,1800,Gabriel Santos,gsantos@email.com,312-555-0001,2023-01-20,2024-01-19
+Metro Gardens,777 Urban Street Chicago IL 60601,2,1,1,700,1800,,,,,
+Metro Gardens,777 Urban Street Chicago IL 60601,3,2,1,950,2400,Madison Cooper,mcooper@email.com,312-555-0002,2023-02-10,2024-02-09
+Metro Gardens,777 Urban Street Chicago IL 60601,4,2,1,950,2400,Oliver Murphy,omurphy@email.com,312-555-0003,2023-01-08,2024-01-07
+Heritage Square,555 Historic Lane Boston MA 02101,Suite A,1,1,650,2200,Lily Anderson,landerson@email.com,617-555-0001,2023-01-25,2024-01-24
+Heritage Square,555 Historic Lane Boston MA 02101,Suite B,1,1,650,2200,,,,,
+Heritage Square,555 Historic Lane Boston MA 02101,Suite C,2,2,1000,2800,Sebastian Torres,storres@email.com,617-555-0002,2023-02-05,2024-02-04
+Heritage Square,555 Historic Lane Boston MA 02101,Suite D,2,2,1000,2800,Penelope Wright,pwright@email.com,617-555-0003,2023-01-12,2024-01-11 

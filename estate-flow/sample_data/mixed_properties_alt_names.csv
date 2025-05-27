@@ -1,0 +1,13 @@
+Complex Name,Location,Unit #,Beds,Baths,Size (sq ft),Rent Cost,Tenant Full Name,E-mail,Phone Number,Start Date,End Date
+Riverside Manor,789 Maple Drive Portland OR 97205,A1,2,2,1200,2800,Jennifer Walsh,j.walsh@email.com,503-555-0001,2023-01-01,2024-12-31
+Riverside Manor,789 Maple Drive Portland OR 97205,A2,2,2,1200,2800,,,,,
+Riverside Manor,789 Maple Drive Portland OR 97205,B1,1,1,800,2200,Carlos Mendez,cmendez@email.com,503-555-0002,2023-02-15,2024-02-14
+Riverside Manor,789 Maple Drive Portland OR 97205,B2,1,1,800,2200,Patricia Liu,p.liu@email.com,503-555-0003,2023-03-01,2024-02-28
+Mountain View Condos,456 Hill Street Seattle WA 98101,1A,3,2,1400,3200,Michael Chang,mchang@email.com,206-555-0001,2023-01-15,2024-01-14
+Mountain View Condos,456 Hill Street Seattle WA 98101,1B,3,2,1400,3200,,,,,
+Mountain View Condos,456 Hill Street Seattle WA 98101,2A,2,1,1000,2600,Sandra Kim,skim@email.com,206-555-0002,2023-02-01,2024-01-31
+Mountain View Condos,456 Hill Street Seattle WA 98101,2B,2,1,1000,2600,Ryan Thompson,rthompson@email.com,206-555-0003,2023-01-20,2024-01-19
+Lakefront Towers,321 Water Avenue Miami FL 33101,101,1,1,750,2400,Isabella Rodriguez,irodriguez@email.com,305-555-0001,2023-01-10,2024-01-09
+Lakefront Towers,321 Water Avenue Miami FL 33101,102,1,1,750,2400,,,,,
+Lakefront Towers,321 Water Avenue Miami FL 33101,201,2,2,1100,3000,Andrew Wilson,awilson@email.com,305-555-0002,2023-02-05,2024-02-04
+Lakefront Towers,321 Water Avenue Miami FL 33101,202,2,2,1100,3000,Sophia Martinez,smartinez@email.com,305-555-0003,2023-01-25,2024-01-24 

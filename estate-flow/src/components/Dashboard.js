@@ -2,14 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 import PropertyModal from './PropertyModal';
+import CSVUpload from './CSVUpload';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [isPropertyModalOpen, setIsPropertyModalOpen] = useState(false);
+  const [isCSVUploadOpen, setIsCSVUploadOpen] = useState(false);
   const [properties, setProperties] = useState([]);
   const [editingProperty, setEditingProperty] = useState(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [expandedProperties, setExpandedProperties] = useState(new Set());
+  const [selectedUnit, setSelectedUnit] = useState(null);
 
   // Load dark mode preference from localStorage on mount
   useEffect(() => {
@@ -38,7 +42,7 @@ const Dashboard = () => {
     sum + property.units.filter(unit => unit.tenant !== null).length, 0
   );
   const totalRevenue = properties.reduce((sum, property) => 
-    sum + property.units.reduce((unitSum, unit) => unitSum + (parseInt(unit.rent) || 0), 0), 0
+    sum + property.units.reduce((unitSum, unit) => unitSum + (parseFloat(unit.rent) || 0), 0), 0
   );
   const occupancyRate = totalUnits > 0 ? (occupiedUnits / totalUnits * 100).toFixed(1) : 0;
 
@@ -104,6 +108,61 @@ const Dashboard = () => {
     }
   };
 
+  const handleOpenCSVUpload = () => {
+    setIsCSVUploadOpen(true);
+  };
+
+  const handleCloseCSVUpload = () => {
+    setIsCSVUploadOpen(false);
+  };
+
+  const handleCSVDataParsed = (parsedProperties) => {
+    // Add the parsed properties to existing properties
+    setProperties(prev => [...prev, ...parsedProperties]);
+    console.log('CSV data imported:', parsedProperties);
+    
+    // Calculate import statistics
+    const totalUnitsImported = parsedProperties.reduce((sum, prop) => sum + prop.units.length, 0);
+    const totalTenantsImported = parsedProperties.reduce((sum, prop) => 
+      sum + prop.units.filter(unit => unit.tenant && unit.tenant.name).length, 0
+    );
+    
+    // Show detailed success message
+    let message = `Successfully imported ${parsedProperties.length} properties with ${totalUnitsImported} units!`;
+    if (totalTenantsImported > 0) {
+      message += `\n${totalTenantsImported} tenants were also imported and can be viewed in the Tenants tab.`;
+    }
+    
+    alert(message);
+  };
+
+  const togglePropertyExpansion = (propertyId) => {
+    const newExpanded = new Set(expandedProperties);
+    if (newExpanded.has(propertyId)) {
+      newExpanded.delete(propertyId);
+      // Clear selected unit if property is being collapsed
+      if (selectedUnit && selectedUnit.propertyId === propertyId) {
+        setSelectedUnit(null);
+      }
+    } else {
+      newExpanded.add(propertyId);
+    }
+    setExpandedProperties(newExpanded);
+  };
+
+  const handleUnitClick = (unit, property) => {
+    setSelectedUnit({
+      ...unit,
+      propertyId: property.id,
+      propertyName: property.name,
+      propertyAddress: property.address
+    });
+  };
+
+  const closeUnitDetails = () => {
+    setSelectedUnit(null);
+  };
+
   return (
     <div className="dashboard">
       {/* Sidebar */}
@@ -129,13 +188,6 @@ const Dashboard = () => {
             >
               <span className="nav-icon">🏢</span>
               <span>Properties</span>
-            </button>
-            <button 
-              className={`nav-item ${activeTab === 'tenants' ? 'active' : ''}`}
-              onClick={() => setActiveTab('tenants')}
-            >
-              <span className="nav-icon">👥</span>
-              <span>Tenants</span>
             </button>
           </div>
 
@@ -194,6 +246,10 @@ const Dashboard = () => {
               <p>Manage your properties and tenants efficiently</p>
             </div>
             <div className="header-actions">
+              <button className="btn btn-secondary" onClick={handleOpenCSVUpload}>
+                <span>📁</span>
+                Import CSV
+              </button>
               <button className="btn btn-primary" onClick={handleOpenPropertyModal}>
                 <span>➕</span>
                 Add Property
@@ -256,7 +312,7 @@ const Dashboard = () => {
                               <h4>{property.name}</h4>
                               <p>{property.numUnits} units • {property.address}</p>
                               <span className="revenue">
-                                ${property.units.reduce((total, unit) => total + (parseInt(unit.rent) || 0), 0).toLocaleString()}/mo
+                                ${property.units.reduce((total, unit) => total + (parseFloat(unit.rent) || 0), 0).toLocaleString()}/mo
                               </span>
                             </div>
                             <div className="property-actions">
@@ -362,8 +418,8 @@ const Dashboard = () => {
                 <div className="properties-page">
                   <div className="page-header">
                     <div className="page-title">
-                      <h2>Properties</h2>
-                      <p>Manage all your properties in one place</p>
+                      <h2>Properties & Units</h2>
+                      <p>Manage all your properties and units in one place</p>
                     </div>
                     <button className="btn btn-primary" onClick={handleOpenPropertyModal}>
                       <span>➕</span>
@@ -372,65 +428,86 @@ const Dashboard = () => {
                   </div>
                   
                   {properties.length > 0 ? (
-                    <div className="properties-grid">
+                    <div className="properties-expandable-list">
                       {properties.map((property) => (
-                        <div key={property.id} className="property-card-large">
-                          <div className="property-card-header">
-                            <div className="property-image-large"></div>
-                            <div className="property-info">
+                        <div key={property.id} className="property-expandable-card">
+                          {/* Property Header */}
+                          <div 
+                            className="property-expandable-header"
+                            onClick={() => togglePropertyExpansion(property.id)}
+                          >
+                            <div className="property-expand-indicator">
+                              <span className={`expand-arrow ${expandedProperties.has(property.id) ? 'expanded' : ''}`}>
+                                ▶
+                              </span>
+                            </div>
+                            <div className="property-image-medium"></div>
+                            <div className="property-summary">
                               <h3>{property.name}</h3>
                               <p className="property-address">{property.address}</p>
-                              <div className="property-stats">
-                                <span className="stat">{property.numUnits} Units</span>
-                                <span className="stat">{property.units.filter(unit => unit.tenant).length} Occupied</span>
-                                <span className="stat revenue">${property.units.reduce((total, unit) => total + (parseInt(unit.rent) || 0), 0).toLocaleString()}/mo</span>
+                              <div className="property-quick-stats">
+                                <span className="quick-stat">{property.numUnits} Units</span>
+                                <span className="quick-stat">{property.units.filter(unit => unit.tenant).length} Occupied</span>
+                                <span className="quick-stat revenue">${property.units.reduce((total, unit) => total + (parseFloat(unit.rent) || 0), 0).toLocaleString()}/mo</span>
                               </div>
                             </div>
-                            <div className="property-actions">
-                              <div className="property-status">
-                                <span className="status-badge success">Active</span>
-                              </div>
-                              <div className="property-buttons">
-                                <button 
-                                  className="btn-edit" 
-                                  onClick={() => handleEditProperty(property)}
-                                  title="Edit Property"
-                                >
-                                  ✏️
-                                </button>
-                                <button 
-                                  className="btn-delete" 
-                                  onClick={() => handleDeleteProperty(property.id, property.name)}
-                                  title="Delete Property"
-                                >
-                                  🗑️
-                                </button>
-                              </div>
+                            <div className="property-actions" onClick={(e) => e.stopPropagation()}>
+                              <button 
+                                className="btn-icon" 
+                                onClick={() => handleEditProperty(property)}
+                                title="Edit Property"
+                              >
+                                ✏️
+                              </button>
+                              <button 
+                                className="btn-icon btn-danger" 
+                                onClick={() => handleDeleteProperty(property.id, property.name)}
+                                title="Delete Property"
+                              >
+                                🗑️
+                              </button>
                             </div>
                           </div>
                           
-                          <div className="property-units">
-                            <h4>Units ({property.numUnits})</h4>
-                            <div className="units-list">
-                              {property.units.map((unit, index) => (
-                                <div key={unit.id} className="unit-item">
-                                  <div className="unit-number">#{unit.number}</div>
-                                  <div className="unit-details">
-                                    <span>{unit.bedrooms}BR • {unit.bathrooms}BA</span>
-                                    {unit.squareFeet && <span> • {unit.squareFeet} sq ft</span>}
-                                    <span className="unit-rent">${unit.rent}/mo</span>
+                          {/* Expandable Units Section */}
+                          {expandedProperties.has(property.id) && (
+                            <div className="property-units-expanded">
+                              <div className="units-grid">
+                                {property.units.map((unit) => (
+                                  <div 
+                                    key={unit.id} 
+                                    className={`unit-card ${selectedUnit?.id === unit.id ? 'selected' : ''}`}
+                                    onClick={() => handleUnitClick(unit, property)}
+                                  >
+                                    <div className="unit-card-header">
+                                      <div className="unit-number-large">#{unit.number}</div>
+                                      <div className="unit-status-indicator">
+                                        {unit.tenant ? (
+                                          <span className="status-occupied-dot">●</span>
+                                        ) : (
+                                          <span className="status-vacant-dot">●</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="unit-card-body">
+                                      <div className="unit-specs">
+                                        <span>{unit.bedrooms}BR • {unit.bathrooms}BA</span>
+                                        {unit.squareFeet && <span>{unit.squareFeet} sq ft</span>}
+                                      </div>
+                                      <div className="unit-rent-display">${unit.rent}/mo</div>
+                                      <div className="unit-tenant-preview">
+                                        {unit.tenant ? (
+                                          <span className="tenant-name-preview">{unit.tenant.name}</span>
+                                        ) : (
+                                          <span className="vacant-preview">Vacant</span>
+                                        )}
+                                      </div>
+                                    </div>
                                   </div>
-                                  <div className="unit-status">
-                                    {unit.tenant ? (
-                                      <span className="status-occupied">Occupied</span>
-                                    ) : (
-                                      <span className="status-vacant">Vacant</span>
-                                    )}
-                                  </div>
-                                </div>
-                              ))}
+                                ))}
+                              </div>
                             </div>
-                          </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -445,77 +522,95 @@ const Dashboard = () => {
                       </button>
                     </div>
                   )}
-                </div>
-              )}
-
-              {activeTab === 'tenants' && (
-                <div className="tenants-page">
-                  <div className="page-header">
-                    <div className="page-title">
-                      <h2>Tenants</h2>
-                      <p>View and manage all your tenants across properties</p>
-                    </div>
-                    <div className="tenant-stats">
-                      <span className="stat-badge">{occupiedUnits} Active Tenants</span>
-                      <span className="stat-badge">{totalUnits - occupiedUnits} Vacant Units</span>
-                    </div>
-                  </div>
                   
-                  {(() => {
-                    const allTenants = properties.flatMap(property =>
-                      property.units
-                        .filter(unit => unit.tenant)
-                        .map(unit => ({
-                          ...unit.tenant,
-                          unitNumber: unit.number,
-                          propertyName: property.name,
-                          propertyId: property.id,
-                          unitId: unit.id,
-                          rent: unit.rent
-                        }))
-                    );
-                    
-                    return allTenants.length > 0 ? (
-                      <div className="tenants-list">
-                        {allTenants.map((tenant, index) => (
-                          <div key={`${tenant.propertyId}-${tenant.unitId}`} className="tenant-card">
-                            <div className="tenant-avatar">
-                              <span>{tenant.name.charAt(0).toUpperCase()}</span>
-                            </div>
-                            <div className="tenant-info">
-                              <h4>{tenant.name}</h4>
-                              <p className="tenant-contact">
-                                {tenant.email && <span>📧 {tenant.email}</span>}
-                                {tenant.phone && <span>📞 {tenant.phone}</span>}
-                              </p>
-                              <p className="tenant-location">
-                                🏢 {tenant.propertyName} • Unit {tenant.unitNumber}
-                              </p>
-                              {tenant.leaseStart && tenant.leaseEnd && (
-                                <p className="tenant-lease">
-                                  📅 {new Date(tenant.leaseStart).toLocaleDateString()} - {new Date(tenant.leaseEnd).toLocaleDateString()}
-                                </p>
-                              )}
-                            </div>
-                            <div className="tenant-rent">
-                              <span className="rent-amount">${tenant.rent}/mo</span>
-                              <span className="rent-status status-current">Current</span>
+                  {/* Unit Details Panel */}
+                  {selectedUnit && (
+                    <div className="unit-details-panel">
+                      <div className="unit-details-overlay" onClick={closeUnitDetails}></div>
+                      <div className="unit-details-content">
+                        <div className="unit-details-header">
+                          <h3>Unit #{selectedUnit.number} Details</h3>
+                          <button className="btn-close" onClick={closeUnitDetails}>×</button>
+                        </div>
+                        <div className="unit-details-body">
+                          <div className="unit-property-info">
+                            <h4>📍 {selectedUnit.propertyName}</h4>
+                            <p>{selectedUnit.propertyAddress}</p>
+                          </div>
+                          
+                          <div className="unit-specifications">
+                            <h4>Unit Specifications</h4>
+                            <div className="spec-grid">
+                              <div className="spec-item">
+                                <label>Bedrooms</label>
+                                <span>{selectedUnit.bedrooms}</span>
+                              </div>
+                              <div className="spec-item">
+                                <label>Bathrooms</label>
+                                <span>{selectedUnit.bathrooms}</span>
+                              </div>
+                              <div className="spec-item">
+                                <label>Square Feet</label>
+                                <span>{selectedUnit.squareFeet || 'Not specified'}</span>
+                              </div>
+                              <div className="spec-item">
+                                <label>Monthly Rent</label>
+                                <span className="rent-highlight">${selectedUnit.rent}</span>
+                              </div>
                             </div>
                           </div>
-                        ))}
+                          
+                          <div className="unit-tenant-info">
+                            <h4>Tenant Information</h4>
+                            {selectedUnit.tenant ? (
+                              <div className="tenant-details">
+                                <div className="tenant-avatar-large">
+                                  <span>{selectedUnit.tenant.name.charAt(0).toUpperCase()}</span>
+                                </div>
+                                <div className="tenant-info-detailed">
+                                  <h5>{selectedUnit.tenant.name}</h5>
+                                  <div className="tenant-contact-details">
+                                    {selectedUnit.tenant.email && (
+                                      <div className="contact-item">
+                                        <span className="contact-icon">📧</span>
+                                        <span>{selectedUnit.tenant.email}</span>
+                                      </div>
+                                    )}
+                                    {selectedUnit.tenant.phone && (
+                                      <div className="contact-item">
+                                        <span className="contact-icon">📞</span>
+                                        <span>{selectedUnit.tenant.phone}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  {selectedUnit.tenant.leaseStart && selectedUnit.tenant.leaseEnd && (
+                                    <div className="lease-info">
+                                      <div className="lease-dates">
+                                        <span className="lease-icon">📅</span>
+                                        <span>
+                                          {new Date(selectedUnit.tenant.leaseStart).toLocaleDateString()} - 
+                                          {new Date(selectedUnit.tenant.leaseEnd).toLocaleDateString()}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="vacant-unit-info">
+                                <div className="vacant-icon">🏠</div>
+                                <p>This unit is currently vacant</p>
+                                <button className="btn btn-secondary">
+                                  <span>👤</span>
+                                  Add Tenant
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    ) : (
-                      <div className="empty-state-large">
-                        <div className="empty-icon">👥</div>
-                        <h3>No Tenants Yet</h3>
-                        <p>Add properties and assign tenants to see them listed here</p>
-                        <button className="btn btn-primary" onClick={handleOpenPropertyModal}>
-                          <span>➕</span>
-                          Add Property with Tenants
-                        </button>
-                      </div>
-                    );
-                  })()}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -648,7 +743,7 @@ const Dashboard = () => {
                 </div>
               )}
 
-              {!['properties', 'tenants', 'settings'].includes(activeTab) && (
+              {!['properties', 'settings'].includes(activeTab) && (
                 <div className="coming-soon">
                   <div className="coming-soon-icon">🚧</div>
                   <h2>Coming Soon</h2>
@@ -667,6 +762,13 @@ const Dashboard = () => {
         onClose={handleClosePropertyModal}
         onSave={handleSaveProperty}
         editingProperty={editingProperty}
+      />
+
+      {/* CSV Upload Modal */}
+      <CSVUpload 
+        isOpen={isCSVUploadOpen}
+        onClose={handleCloseCSVUpload}
+        onDataParsed={handleCSVDataParsed}
       />
     </div>
   );
