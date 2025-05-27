@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 import PropertyModal from './PropertyModal';
 import CSVUpload from './CSVUpload';
+import Chatbot from './Chatbot';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ const Dashboard = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [expandedProperties, setExpandedProperties] = useState(new Set());
   const [selectedUnit, setSelectedUnit] = useState(null);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
   // Load dark mode preference from localStorage on mount
   useEffect(() => {
@@ -213,6 +215,17 @@ const Dashboard = () => {
             >
               <span className="nav-icon">📈</span>
               <span>Reports</span>
+            </button>
+          </div>
+
+          <div className="nav-section">
+            <h3 className="nav-section-title">AI Assistant</h3>
+            <button 
+              className={`nav-item ${isChatbotOpen ? 'active' : ''}`}
+              onClick={() => setIsChatbotOpen(!isChatbotOpen)}
+            >
+              <span className="nav-icon">🤖</span>
+              <span>Chatbot</span>
             </button>
           </div>
 
@@ -769,6 +782,13 @@ const Dashboard = () => {
         isOpen={isCSVUploadOpen}
         onClose={handleCloseCSVUpload}
         onDataParsed={handleCSVDataParsed}
+      />
+
+      {/* Chatbot Component */}
+      <Chatbot 
+        isOpen={isChatbotOpen}
+        onClose={() => setIsChatbotOpen(false)}
+        properties={properties}
       />
     </div>
   );

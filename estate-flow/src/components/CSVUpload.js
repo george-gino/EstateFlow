@@ -4,28 +4,13 @@ import './CSVUpload.css';
 
 const CSVUpload = ({ isOpen, onClose, onDataParsed }) => {
   const [file, setFile] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1); // 1: Upload, 2: Review & Import
+  // eslint-disable-next-line no-unused-vars
   const [csvData, setCsvData] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [headers, setHeaders] = useState([]);
   const [mappedData, setMappedData] = useState([]);
-  const [propertyMapping, setPropertyMapping] = useState({});
-
-  // Field mapping options
-  const propertyFields = [
-    { key: 'propertyName', label: 'Property Name', required: true },
-    { key: 'propertyAddress', label: 'Property Address', required: true },
-    { key: 'unitNumber', label: 'Unit Number', required: true },
-    { key: 'bedrooms', label: 'Bedrooms', required: false },
-    { key: 'bathrooms', label: 'Bathrooms', required: false },
-    { key: 'squareFeet', label: 'Square Feet', required: false },
-    { key: 'rent', label: 'Monthly Rent', required: true },
-    { key: 'tenantName', label: 'Tenant Name', required: false },
-    { key: 'tenantEmail', label: 'Tenant Email', required: false },
-    { key: 'tenantPhone', label: 'Tenant Phone', required: false },
-    { key: 'leaseStart', label: 'Lease Start Date', required: false },
-    { key: 'leaseEnd', label: 'Lease End Date', required: false }
-  ];
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
@@ -39,7 +24,7 @@ const CSVUpload = ({ isOpen, onClose, onDataParsed }) => {
   const parseCSV = () => {
     if (!file) return;
 
-    setLoading(true);
+    setIsLoading(true);
     Papa.parse(file, {
       complete: (results) => {
         if (results.data && results.data.length > 0) {
@@ -53,19 +38,18 @@ const CSVUpload = ({ isOpen, onClose, onDataParsed }) => {
           
           // Auto-detect mapping using AI-like logic
           const autoMapping = autoDetectMapping(headers);
-          setPropertyMapping(autoMapping);
           
           // Automatically process the data and go to review step
           processDataWithMapping(data, headers, autoMapping);
         } else {
           alert('Unable to parse CSV file. Please check the format.');
-          setLoading(false);
+          setIsLoading(false);
         }
       },
       error: (error) => {
         console.error('CSV parsing error:', error);
         alert('Error parsing CSV file');
-        setLoading(false);
+        setIsLoading(false);
       }
     });
   };
@@ -251,13 +235,6 @@ const CSVUpload = ({ isOpen, onClose, onDataParsed }) => {
     return mapping;
   };
 
-  const updateMapping = (field, headerIndex) => {
-    setPropertyMapping(prev => ({
-      ...prev,
-      [field]: headerIndex === '' ? undefined : parseInt(headerIndex)
-    }));
-  };
-
   const processDataWithMapping = (data, headers, mapping) => {
     try {
       const processedData = data.map((row, index) => {
@@ -335,11 +312,11 @@ const CSVUpload = ({ isOpen, onClose, onDataParsed }) => {
       
       setMappedData(properties);
       setStep(2);
-      setLoading(false);
+      setIsLoading(false);
     } catch (error) {
       console.error('Error processing data:', error);
       alert('Error processing data. Please check your CSV format and try again.');
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -353,7 +330,6 @@ const CSVUpload = ({ isOpen, onClose, onDataParsed }) => {
     setCsvData([]);
     setHeaders([]);
     setMappedData([]);
-    setPropertyMapping({});
     setStep(1);
     onClose();
   };
@@ -415,9 +391,9 @@ const CSVUpload = ({ isOpen, onClose, onDataParsed }) => {
                 <button 
                   className="btn-parse" 
                   onClick={parseCSV}
-                  disabled={loading}
+                  disabled={isLoading}
                 >
-                  {loading ? 'Processing...' : 'Process & Review'}
+                  {isLoading ? 'Processing...' : 'Process & Review'}
                 </button>
               )}
             </div>

@@ -21,3 +21,17 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Backend specific
+chatbot-backend/.env
+chatbot-backend/__pycache__/
+chatbot-backend/*.pyc
+chatbot-backend/.pytest_cache/
+chatbot-backend/venv/
+chatbot-backend/.venv/
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
