@@ -146,7 +146,7 @@ class PropertyAnalyzer:
             logger.info("OpenAI client not available, using fallback response")
             return self._generate_fallback_response(property_data, user_message)
         
-        system_prompt = f"""You are an expert property management AI assistant. You have access to detailed property portfolio data and can provide insights, analysis, and recommendations.
+        system_prompt = f"""You are a friendly, knowledgeable property management assistant. You speak naturally and conversationally, like you're chatting with a friend who owns rental properties.
 
 Current Portfolio Overview:
 - Total Properties: {property_data['total_properties']}
@@ -160,19 +160,20 @@ Current Portfolio Overview:
 Detailed Property Data:
 {json.dumps(property_data['properties'], indent=2)}
 
-You should:
-1. Answer user questions directly and accurately based on the data
-2. Provide actionable insights and recommendations
-3. Identify trends, opportunities, and potential issues
-4. Be conversational and helpful
-5. Use specific numbers and data points when relevant
-6. Suggest improvements for revenue optimization, occupancy rates, or operational efficiency
-7. If asked about specific properties or units, provide detailed information
-8. If the question is general, provide portfolio-wide insights
-9. For questions about specific tenants, units, or properties, analyze the actual data to find the answer
-10. Be able to handle obscure or complex questions by reasoning about the data
+IMPORTANT FORMATTING RULES:
+- Write responses in a natural, conversational tone
+- NO markdown formatting (no **, *, #, or - symbols)
+- NO bullet points or numbered lists
+- Use plain text only, like you're having a conversation
+- Make responses feel personal and friendly
+- Use "you" and "your" to keep it conversational
+- When mentioning specific numbers, work them naturally into sentences
+- Keep responses concise but informative
+- If listing multiple items, use commas or write them in paragraph form
 
-Keep responses concise but informative. Use bullet points for lists when appropriate."""
+Example good response: "Looking at your portfolio, I can see you have 3 vacant units right now. The most expensive one is unit PH2 at Luxury Towers, which could bring in $8,500 per month once rented. That's a 4-bedroom, 4-bathroom penthouse with 3,500 square feet. It's definitely your premium unit!"
+
+Answer questions directly based on the data and provide helpful insights in a conversational way."""
 
         try:
             logger.info(f"Sending request to OpenAI API for message: {user_message}")
@@ -197,16 +198,16 @@ Keep responses concise but informative. Use bullet points for lists when appropr
             error_str = str(e).lower()
             if "insufficient_quota" in error_str or "quota" in error_str:
                 logger.error("OpenAI API quota exceeded")
-                return "❌ **OpenAI API Issue**: Your API quota has been exceeded. Please check your OpenAI billing settings and add credits to your account."
+                return "I'm having trouble connecting to my AI service right now due to quota limits. Let me help you with a basic analysis instead! " + self._generate_fallback_response(property_data, user_message)
             elif "invalid_api_key" in error_str or "unauthorized" in error_str or "401" in error_str:
                 logger.error("Invalid or insufficient OpenAI API key permissions")
-                return "🔑 **API Key Issue**: Your OpenAI API key doesn't have the required permissions. Please:\n\n• Get a new API key from https://platform.openai.com/api-keys\n• Ensure your OpenAI account has billing set up\n• Make sure the key has 'model.request' permissions\n\nUsing basic analysis for now: " + self._generate_fallback_response(property_data, user_message)
+                return "I'm having some technical difficulties with my AI connection. No worries though, I can still help you analyze your portfolio! " + self._generate_fallback_response(property_data, user_message)
             elif "rate_limit" in error_str:
                 logger.error("OpenAI API rate limit exceeded")
-                return "⏱️ **Rate Limit**: Too many requests to OpenAI API. Please wait a moment and try again."
+                return "I'm getting a lot of questions right now! Give me just a moment and try asking again."
             else:
                 logger.error(f"Unknown OpenAI error: {str(e)}")
-                return f"🔧 **Technical Issue**: {str(e)[:100]}...\n\nUsing basic analysis: " + self._generate_fallback_response(property_data, user_message)
+                return "I'm experiencing some technical issues, but I can still help you out! " + self._generate_fallback_response(property_data, user_message)
     
     def _generate_fallback_response(self, property_data, user_message):
         """Generate a fallback response when OpenAI API is not available"""
@@ -229,6 +230,9 @@ Keep responses concise but informative. Use bullet points for lists when appropr
         elif any(phrase in message_lower for phrase in ['lowest rent', 'least rent', 'pays the least', 'cheapest']):
             return self._find_lowest_rent_tenant(property_data)
         
+        elif any(phrase in message_lower for phrase in ['most expensive vacant', 'highest rent vacant', 'expensive vacant']):
+            return self._find_most_expensive_vacant_unit(property_data)
+        
         elif any(phrase in message_lower for phrase in ['vacant units', 'empty units', 'available units']):
             return self._list_vacant_units(property_data)
         
@@ -237,46 +241,45 @@ Keep responses concise but informative. Use bullet points for lists when appropr
         
         # Basic keyword matching for common queries
         elif any(word in message_lower for word in ['occupancy', 'vacant', 'empty', 'available']):
-            return f"Your current occupancy rate is {occupancy_rate}%. You have {vacant_units} vacant units out of {total_units} total units. " + \
-                   ("This is a good occupancy rate!" if occupancy_rate >= 95 else "Consider marketing strategies to fill vacant units.")
+            response = f"Your current occupancy rate is {occupancy_rate}%. You have {vacant_units} vacant units out of {total_units} total units."
+            if occupancy_rate >= 95:
+                response += " That's excellent! Your properties are performing really well."
+            else:
+                response += " You might want to focus on marketing strategies to fill those empty units."
+            return response
         
         elif any(word in message_lower for word in ['revenue', 'income', 'money', 'profit']):
             if occupied_units > 0:
                 avg_rent = monthly_revenue / occupied_units
-                return f"Your portfolio generates ${monthly_revenue:,.2f} in monthly revenue and ${annual_revenue:,.2f} annually. " + \
-                       f"With {occupied_units} occupied units, that's an average of ${avg_rent:,.2f} per unit per month."
+                return f"Your portfolio generates ${monthly_revenue:,.2f} in monthly revenue and ${annual_revenue:,.2f} annually. With {occupied_units} occupied units, that works out to an average of ${avg_rent:,.2f} per unit per month."
             else:
                 return f"Your portfolio could generate revenue once you have tenants. You currently have {total_units} units available for rent."
         
         elif any(word in message_lower for word in ['property', 'properties', 'building']):
-            return f"You have {total_properties} properties with a total of {total_units} units. " + \
-                   f"Your portfolio maintains a {occupancy_rate}% occupancy rate."
+            return f"You have {total_properties} properties with a total of {total_units} units. Your portfolio maintains a {occupancy_rate}% occupancy rate."
         
         elif any(word in message_lower for word in ['tenant', 'tenants', 'renter']):
-            return f"You currently have {occupied_units} tenants across your {total_properties} properties. " + \
-                   f"Your occupancy rate is {occupancy_rate}%."
+            return f"You currently have {occupied_units} tenants across your {total_properties} properties. Your occupancy rate is {occupancy_rate}%."
         
         elif any(word in message_lower for word in ['improve', 'better', 'optimize', 'increase']):
             suggestions = []
             if occupancy_rate < 95:
-                suggestions.append("Focus on filling vacant units to increase revenue")
+                suggestions.append("focus on filling vacant units to increase revenue")
             if total_units > 0 and occupied_units > 0:
                 avg_rent = monthly_revenue / occupied_units
-                suggestions.append(f"Review market rates - your average rent is ${avg_rent:.2f}")
-            suggestions.append("Consider property maintenance and improvements to justify higher rents")
+                suggestions.append(f"review market rates since your average rent is ${avg_rent:.2f}")
+            suggestions.append("consider property maintenance and improvements to justify higher rents")
             
-            return "Here are some suggestions to improve your portfolio:\n• " + "\n• ".join(suggestions)
+            return "Here are some suggestions to improve your portfolio: " + ", ".join(suggestions) + "."
         
         else:
-            return f"I can help you analyze your {total_properties} properties with {total_units} units. " + \
-                   f"You're currently at {occupancy_rate}% occupancy generating ${monthly_revenue:,.2f}/month. " + \
-                   "Try asking about occupancy rates, revenue, specific properties, or ways to improve your portfolio!"
+            return f"I can help you analyze your {total_properties} properties with {total_units} units. You're currently at {occupancy_rate}% occupancy generating ${monthly_revenue:,.2f} per month. Try asking about occupancy rates, revenue, specific properties, or ways to improve your portfolio!"
     
     def _find_highest_rent_tenant(self, property_data):
         """Find the tenant who pays the highest rent"""
         properties = property_data.get('properties', [])
         if not properties:
-            return "No property data available to analyze tenant rents."
+            return "I don't have any property data to analyze tenant rents right now."
         
         highest_rent = 0
         highest_rent_tenant = None
@@ -294,7 +297,7 @@ Keep responses concise but informative. Use bullet points for lists when appropr
                         highest_rent_property = prop.get('name')
         
         if highest_rent_tenant:
-            return f"The tenant who pays the most rent is **{highest_rent_tenant}** in unit #{highest_rent_unit} at {highest_rent_property}, paying ${highest_rent:,.2f} per month."
+            return f"The tenant who pays the most rent is {highest_rent_tenant} in unit {highest_rent_unit} at {highest_rent_property}. They pay ${highest_rent:,.2f} per month."
         else:
             return "I couldn't find any occupied units with tenant information to compare rents."
     
@@ -302,7 +305,7 @@ Keep responses concise but informative. Use bullet points for lists when appropr
         """Find the tenant who pays the lowest rent"""
         properties = property_data.get('properties', [])
         if not properties:
-            return "No property data available to analyze tenant rents."
+            return "I don't have any property data to analyze tenant rents right now."
         
         lowest_rent = float('inf')
         lowest_rent_tenant = None
@@ -320,15 +323,49 @@ Keep responses concise but informative. Use bullet points for lists when appropr
                         lowest_rent_property = prop.get('name')
         
         if lowest_rent_tenant:
-            return f"The tenant who pays the least rent is **{lowest_rent_tenant}** in unit #{lowest_rent_unit} at {lowest_rent_property}, paying ${lowest_rent:,.2f} per month."
+            return f"The tenant who pays the least rent is {lowest_rent_tenant} in unit {lowest_rent_unit} at {lowest_rent_property}. They pay ${lowest_rent:,.2f} per month."
         else:
             return "I couldn't find any occupied units with tenant information to compare rents."
+    
+    def _find_most_expensive_vacant_unit(self, property_data):
+        """Find the most expensive vacant unit"""
+        properties = property_data.get('properties', [])
+        if not properties:
+            return "I don't have any property data to analyze vacant units right now."
+        
+        highest_rent = 0
+        highest_rent_unit = None
+        
+        for prop in properties:
+            for unit in prop.get('units', []):
+                if not unit.get('is_occupied'):
+                    rent = unit.get('rent', 0)
+                    if rent > highest_rent:
+                        highest_rent = rent
+                        highest_rent_unit = {
+                            'property': prop.get('name'),
+                            'unit': unit.get('number'),
+                            'rent': rent,
+                            'bedrooms': unit.get('bedrooms', 0),
+                            'bathrooms': unit.get('bathrooms', 0),
+                            'square_feet': unit.get('squareFeet', 0)
+                        }
+        
+        if highest_rent_unit:
+            unit = highest_rent_unit
+            response = f"The most expensive vacant property in your portfolio is unit {unit['unit']} at {unit['property']}. "
+            response += f"This is a {unit['bedrooms']} bedroom, {unit['bathrooms']} bathroom unit with {unit['square_feet']:,} square feet. "
+            response += f"It could rent for ${unit['rent']:,.2f} per month. "
+            response += "This unit is currently vacant and represents the highest rental value among your vacant units."
+            return response
+        else:
+            return "Great news! You have no vacant units. All your properties are fully occupied."
     
     def _list_vacant_units(self, property_data):
         """List all vacant units"""
         properties = property_data.get('properties', [])
         if not properties:
-            return "No property data available to analyze vacant units."
+            return "I don't have any property data to analyze vacant units right now."
         
         vacant_units = []
         for prop in properties:
@@ -345,12 +382,24 @@ Keep responses concise but informative. Use bullet points for lists when appropr
         if not vacant_units:
             return "Great news! You have no vacant units. All your properties are fully occupied."
         
-        response = f"You have {len(vacant_units)} vacant units:\n\n"
-        for unit in vacant_units:
-            response += f"• **{unit['property']}** - Unit #{unit['unit']} | {unit['bedrooms']}BR/{unit['bathrooms']}BA | ${unit['rent']:,.2f}/mo\n"
+        if len(vacant_units) == 1:
+            unit = vacant_units[0]
+            response = f"You have 1 vacant unit: unit {unit['unit']} at {unit['property']}. It's a {unit['bedrooms']} bedroom, {unit['bathrooms']} bathroom unit that could rent for ${unit['rent']:,.2f} per month."
+        else:
+            response = f"You have {len(vacant_units)} vacant units. "
+            
+            # List first few units conversationally
+            unit_descriptions = []
+            for i, unit in enumerate(vacant_units[:3]):  # Show first 3 units
+                unit_descriptions.append(f"unit {unit['unit']} at {unit['property']} (${unit['rent']:,.2f}/month)")
+            
+            if len(vacant_units) <= 3:
+                response += "They are: " + ", ".join(unit_descriptions) + "."
+            else:
+                response += "The main ones are: " + ", ".join(unit_descriptions) + f", and {len(vacant_units) - 3} others."
         
         potential_revenue = sum(unit['rent'] for unit in vacant_units)
-        response += f"\nPotential additional monthly revenue: ${potential_revenue:,.2f}"
+        response += f" If you fill all vacant units, you could add ${potential_revenue:,.2f} to your monthly revenue."
         
         return response
     
@@ -358,7 +407,7 @@ Keep responses concise but informative. Use bullet points for lists when appropr
         """Analyze which properties perform best"""
         properties = property_data.get('properties', [])
         if not properties:
-            return "No property data available to analyze performance."
+            return "I don't have any property data to analyze performance right now."
         
         property_performance = []
         for prop in properties:
@@ -377,15 +426,20 @@ Keep responses concise but informative. Use bullet points for lists when appropr
         # Sort by revenue (highest first)
         property_performance.sort(key=lambda x: x['revenue'], reverse=True)
         
-        response = "Here's your property performance analysis:\n\n"
-        for i, prop in enumerate(property_performance[:3], 1):
-            response += f"{i}. **{prop['name']}**\n"
-            response += f"   • Revenue: ${prop['revenue']:,.2f}/month\n"
-            response += f"   • Occupancy: {prop['occupancy']}%\n"
-            response += f"   • Average rent: ${prop['avg_rent']:,.2f}\n\n"
+        if len(property_performance) == 1:
+            prop = property_performance[0]
+            return f"You have one property, {prop['name']}, which generates ${prop['revenue']:,.2f} per month with a {prop['occupancy']}% occupancy rate."
         
         best_property = property_performance[0]
-        response += f"Your top performer is **{best_property['name']}** generating ${best_property['revenue']:,.2f} monthly."
+        response = f"Your top performing property is {best_property['name']}, generating ${best_property['revenue']:,.2f} monthly with {best_property['occupancy']}% occupancy."
+        
+        if len(property_performance) >= 2:
+            second_best = property_performance[1]
+            response += f" Your second best is {second_best['name']} at ${second_best['revenue']:,.2f} monthly."
+        
+        if len(property_performance) >= 3:
+            third_best = property_performance[2]
+            response += f" Third place goes to {third_best['name']} with ${third_best['revenue']:,.2f} monthly."
         
         return response
 
