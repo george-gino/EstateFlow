@@ -199,7 +199,6 @@ const Chatbot = ({ isOpen, onClose, properties }) => {
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Ask me anything about your properties..."
             rows="1"
             disabled={isLoading}
           />

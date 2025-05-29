@@ -277,7 +277,8 @@ const CSVUpload = ({ isOpen, onClose, onDataParsed }) => {
           bathrooms: parseFloat(item.bathrooms) || 1,
           squareFeet: item.squareFeet || '',
           rent: item.rent ? parseFloat(item.rent.replace(/[^0-9.]/g, '')) || 0 : 0,
-          tenant: null
+          tenant: null,
+          rentPaid: false
         };
         
         // Add tenant if data exists

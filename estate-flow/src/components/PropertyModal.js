@@ -13,7 +13,8 @@ const PropertyModal = ({ isOpen, onClose, onSave, editingProperty }) => {
       bathrooms: 1, 
       squareFeet: '', 
       rent: '',
-      tenant: null
+      tenant: null,
+      rentPaid: false
     }]
   });
 
@@ -41,7 +42,8 @@ const PropertyModal = ({ isOpen, onClose, onSave, editingProperty }) => {
           bathrooms: 1, 
           squareFeet: '', 
           rent: '',
-          tenant: null
+          tenant: null,
+          rentPaid: false
         }]
       });
     }
@@ -76,7 +78,8 @@ const PropertyModal = ({ isOpen, onClose, onSave, editingProperty }) => {
             bathrooms: 1,
             squareFeet: '',
             rent: '',
-            tenant: null
+            tenant: null,
+            rentPaid: false
           });
         }
       }
@@ -125,7 +128,8 @@ const PropertyModal = ({ isOpen, onClose, onSave, editingProperty }) => {
         bathrooms: 1, 
         squareFeet: '', 
         rent: '',
-        tenant: null
+        tenant: null,
+        rentPaid: false
       }]
     });
     setCurrentStep(1);

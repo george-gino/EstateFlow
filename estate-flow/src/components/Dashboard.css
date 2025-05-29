@@ -1238,6 +1238,13 @@
   color: var(--primary-600);
 }
 
+.unit-status-indicators {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--spacing-xs);
+}
+
 .unit-status-indicator {
   font-size: 1.2rem;
 }
@@ -1248,6 +1255,53 @@
 
 .status-vacant-dot {
   color: var(--warning-500);
+}
+
+/* Rent Payment Button */
+.rent-payment-button {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+}
+
+.rent-payment-button.paid {
+  background-color: var(--success-500);
+  color: white;
+  box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
+}
+
+.rent-payment-button.paid:hover {
+  background-color: var(--success-600);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(34, 197, 94, 0.3);
+}
+
+.rent-payment-button.unpaid {
+  background-color: var(--danger-500);
+  color: white;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+.rent-payment-button.unpaid:hover {
+  background-color: var(--danger-600);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+}
+
+.rent-payment-text {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
 }
 
 .unit-card-body {
@@ -1407,6 +1461,23 @@
 .rent-highlight {
   color: var(--success-600) !important;
   font-size: 1.2rem !important;
+}
+
+.payment-status {
+  font-weight: var(--font-semibold) !important;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.9rem !important;
+}
+
+.payment-status.paid {
+  color: var(--success-600) !important;
+  background-color: var(--success-100);
+}
+
+.payment-status.unpaid {
+  color: var(--danger-600) !important;
+  background-color: var(--danger-100);
 }
 
 .tenant-details {

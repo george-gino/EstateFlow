@@ -165,6 +165,26 @@ const Dashboard = () => {
     setSelectedUnit(null);
   };
 
+  // Handle rent payment toggle
+  const handleRentPaymentToggle = (propertyId, unitId, currentStatus, event) => {
+    event.stopPropagation(); // Prevent unit details panel from opening
+    
+    setProperties(prevProperties => 
+      prevProperties.map(property => 
+        property.id === propertyId 
+          ? {
+              ...property,
+              units: property.units.map(unit => 
+                unit.id === unitId 
+                  ? { ...unit, rentPaid: !currentStatus }
+                  : unit
+              )
+            }
+          : property
+      )
+    );
+  };
+
   return (
     <div className="dashboard">
       {/* Sidebar */}
@@ -515,6 +535,18 @@ const Dashboard = () => {
                                           <span className="vacant-preview">Vacant</span>
                                         )}
                                       </div>
+                                      
+                                      {/* Rent Payment Button */}
+                                      {unit.tenant && (
+                                        <button
+                                          className={`rent-payment-button ${unit.rentPaid ? 'paid' : 'unpaid'}`}
+                                          onClick={(e) => handleRentPaymentToggle(property.id, unit.id, unit.rentPaid || false, e)}
+                                        >
+                                          <span className="rent-payment-text">
+                                            {unit.rentPaid ? '✓ Rent Paid' : '✗ Rent Unpaid'}
+                                          </span>
+                                        </button>
+                                      )}
                                     </div>
                                   </div>
                                 ))}
@@ -570,6 +602,14 @@ const Dashboard = () => {
                                 <label>Monthly Rent</label>
                                 <span className="rent-highlight">${selectedUnit.rent}</span>
                               </div>
+                              {selectedUnit.tenant && (
+                                <div className="spec-item">
+                                  <label>Rent Payment Status</label>
+                                  <span className={`payment-status ${selectedUnit.rentPaid ? 'paid' : 'unpaid'}`}>
+                                    {selectedUnit.rentPaid ? '✓ Paid' : '✗ Unpaid'}
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           </div>
                           
