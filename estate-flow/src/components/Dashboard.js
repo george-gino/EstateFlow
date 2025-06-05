@@ -1,5 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { 
+  MdDashboard, 
+  MdBusiness, 
+  MdSmartToy, 
+  MdSettings, 
+  MdEdit, 
+  MdDelete, 
+  MdEmail, 
+  MdPhone, 
+  MdCalendarToday, 
+  MdHome, 
+  MdPerson, 
+  MdBarChart, 
+  MdLogout, 
+  MdSave, 
+  MdWbSunny, 
+  MdAdd,
+  MdBuild,
+  MdPayment,
+  MdTrendingUp,
+  MdFolder,
+  MdNightlight,
+  MdPalette,
+  MdAccountCircle,
+  MdConstruction,
+  MdNightsStay,
+  MdGroup,
+  MdAttachMoney
+} from 'react-icons/md';
 import './Dashboard.css';
 import PropertyModal from './PropertyModal';
 import CSVUpload from './CSVUpload';
@@ -57,6 +86,20 @@ const Dashboard = () => {
     setIsPropertyModalOpen(true);
   };
 
+  const handleOpenCSVUpload = () => {
+    setIsCSVUploadOpen(true);
+  };
+
+  const handleCloseCSVUpload = () => {
+    setIsCSVUploadOpen(false);
+  };
+
+  const handleCSVDataParsed = (parsedData) => {
+    console.log('CSV data parsed:', parsedData);
+    setProperties(prev => [...prev, ...parsedData]);
+    setIsCSVUploadOpen(false);
+  };
+
   const handleClosePropertyModal = () => {
     setIsPropertyModalOpen(false);
     setEditingProperty(null);
@@ -67,23 +110,26 @@ const Dashboard = () => {
     setIsPropertyModalOpen(true);
   };
 
+  const handleDeleteProperty = (propertyId, propertyName) => {
+    if (window.confirm(`Are you sure you want to delete "${propertyName}"? This action cannot be undone.`)) {
+      setProperties(prev => prev.filter(property => property.id !== propertyId));
+    }
+  };
+
   const handleSaveProperty = (propertyData) => {
     if (editingProperty) {
-      // Update existing property
       const updatedProperty = {
         ...editingProperty,
         ...propertyData,
-        id: editingProperty.id, // Keep the original ID
-        createdAt: editingProperty.createdAt, // Keep original creation date
-        updatedAt: new Date().toISOString() // Add update timestamp
+        id: editingProperty.id,
+        createdAt: editingProperty.createdAt,
+        updatedAt: new Date().toISOString()
       };
       
       setProperties(prev => prev.map(property => 
         property.id === editingProperty.id ? updatedProperty : property
       ));
-      console.log('Property updated:', updatedProperty);
     } else {
-      // Add new property
       const newProperty = {
         id: Date.now(),
         ...propertyData,
@@ -91,103 +137,31 @@ const Dashboard = () => {
       };
       
       setProperties(prev => [...prev, newProperty]);
-      console.log('New property added:', newProperty);
     }
-    
-    // You can add additional logic here like saving to a backend API
-  };
-
-  const handleDeleteProperty = (propertyId, propertyName) => {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${propertyName}"?\n\nThis action cannot be undone and will remove all associated units and tenant information.`
-    );
-    
-    if (confirmed) {
-      setProperties(prev => prev.filter(property => property.id !== propertyId));
-      console.log('Property deleted:', propertyId);
-      
-      // You can add additional logic here like calling a backend API to delete
-    }
-  };
-
-  const handleOpenCSVUpload = () => {
-    setIsCSVUploadOpen(true);
-  };
-
-  const handleCloseCSVUpload = () => {
-    setIsCSVUploadOpen(false);
-  };
-
-  const handleCSVDataParsed = (parsedProperties) => {
-    // Add the parsed properties to existing properties
-    setProperties(prev => [...prev, ...parsedProperties]);
-    console.log('CSV data imported:', parsedProperties);
-    
-    // Calculate import statistics
-    const totalUnitsImported = parsedProperties.reduce((sum, prop) => sum + prop.units.length, 0);
-    const totalTenantsImported = parsedProperties.reduce((sum, prop) => 
-      sum + prop.units.filter(unit => unit.tenant && unit.tenant.name).length, 0
-    );
-    
-    // Show detailed success message
-    let message = `Successfully imported ${parsedProperties.length} properties with ${totalUnitsImported} units!`;
-    if (totalTenantsImported > 0) {
-      message += `\n${totalTenantsImported} tenants were also imported and can be viewed in the Tenants tab.`;
-    }
-    
-    alert(message);
   };
 
   const togglePropertyExpansion = (propertyId) => {
-    const newExpanded = new Set(expandedProperties);
-    if (newExpanded.has(propertyId)) {
-      newExpanded.delete(propertyId);
-      // Clear selected unit if property is being collapsed
-      if (selectedUnit && selectedUnit.propertyId === propertyId) {
-        setSelectedUnit(null);
+    setExpandedProperties(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(propertyId)) {
+        newSet.delete(propertyId);
+      } else {
+        newSet.add(propertyId);
       }
-    } else {
-      newExpanded.add(propertyId);
-    }
-    setExpandedProperties(newExpanded);
+      return newSet;
+    });
   };
 
   const handleUnitClick = (unit, property) => {
-    setSelectedUnit({
-      ...unit,
-      propertyId: property.id,
-      propertyName: property.name,
-      propertyAddress: property.address
-    });
+    setSelectedUnit({ ...unit, property });
   };
 
   const closeUnitDetails = () => {
     setSelectedUnit(null);
   };
 
-  // Handle rent payment toggle
-  const handleRentPaymentToggle = (propertyId, unitId, currentStatus, event) => {
-    event.stopPropagation(); // Prevent unit details panel from opening
-    
-    setProperties(prevProperties => 
-      prevProperties.map(property => 
-        property.id === propertyId 
-          ? {
-              ...property,
-              units: property.units.map(unit => 
-                unit.id === unitId 
-                  ? { ...unit, rentPaid: !currentStatus }
-                  : unit
-              )
-            }
-          : property
-      )
-    );
-  };
-
   return (
     <div className="dashboard">
-      {/* Sidebar */}
       <aside className="dashboard-sidebar">
         <div className="sidebar-header">
           <h2 className="sidebar-logo">EstateFlow</h2>
@@ -201,14 +175,14 @@ const Dashboard = () => {
               className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`}
               onClick={() => setActiveTab('overview')}
             >
-              <span className="nav-icon">📊</span>
+              <MdBarChart className="nav-icon" />
               <span>Overview</span>
             </button>
             <button 
               className={`nav-item ${activeTab === 'properties' ? 'active' : ''}`}
               onClick={() => setActiveTab('properties')}
             >
-              <span className="nav-icon">🏢</span>
+              <MdBusiness className="nav-icon" />
               <span>Properties</span>
             </button>
           </div>
@@ -219,21 +193,21 @@ const Dashboard = () => {
               className={`nav-item ${activeTab === 'maintenance' ? 'active' : ''}`}
               onClick={() => setActiveTab('maintenance')}
             >
-              <span className="nav-icon">🔧</span>
+              <MdBuild className="nav-icon" />
               <span>Maintenance</span>
             </button>
             <button 
               className={`nav-item ${activeTab === 'payments' ? 'active' : ''}`}
               onClick={() => setActiveTab('payments')}
             >
-              <span className="nav-icon">💳</span>
+              <MdPayment className="nav-icon" />
               <span>Payments</span>
             </button>
             <button 
               className={`nav-item ${activeTab === 'reports' ? 'active' : ''}`}
               onClick={() => setActiveTab('reports')}
             >
-              <span className="nav-icon">📈</span>
+              <MdTrendingUp className="nav-icon" />
               <span>Reports</span>
             </button>
           </div>
@@ -244,7 +218,7 @@ const Dashboard = () => {
               className={`nav-item ${isChatbotOpen ? 'active' : ''}`}
               onClick={() => setIsChatbotOpen(!isChatbotOpen)}
             >
-              <span className="nav-icon">🤖</span>
+              <MdSmartToy className="nav-icon" />
               <span>Chatbot</span>
             </button>
           </div>
@@ -255,7 +229,7 @@ const Dashboard = () => {
               className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
               onClick={() => setActiveTab('settings')}
             >
-              <span className="nav-icon">⚙️</span>
+              <MdSettings className="nav-icon" />
               <span>Settings</span>
             </button>
           </div>
@@ -263,15 +237,13 @@ const Dashboard = () => {
 
         <div className="sidebar-footer">
           <button className="logout-btn" onClick={handleLogout}>
-            <span className="nav-icon">🚪</span>
+            <MdLogout className="nav-icon" />
             <span>Back to Home</span>
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="dashboard-main">
-        {/* Top Header */}
         <header className="dashboard-header">
           <div className="header-content">
             <div className="header-title">
@@ -280,32 +252,30 @@ const Dashboard = () => {
             </div>
             <div className="header-actions">
               <button className="btn btn-secondary" onClick={handleOpenCSVUpload}>
-                <span>📁</span>
+                <MdFolder style={{ marginRight: '8px' }} />
                 Import CSV
               </button>
               <button className="btn btn-primary" onClick={handleOpenPropertyModal}>
-                <span>➕</span>
+                <MdAdd style={{ marginRight: '8px' }} />
                 Add Property
               </button>
             </div>
           </div>
         </header>
 
-        {/* Dashboard Content */}
         <div className="dashboard-content">
           {activeTab === 'overview' && (
             <div className="tab-content">
-              {/* Stats Cards */}
               <div className="stats-grid">
                 <div className="stat-card">
-                  <div className="stat-icon properties">🏢</div>
+                  <div className="stat-icon properties"><MdBusiness /></div>
                   <div className="stat-info">
                     <h3>{totalProperties}</h3>
                     <p>Total Properties</p>
                   </div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-icon tenants">👥</div>
+                  <div className="stat-icon tenants"><MdGroup /></div>
                   <div className="stat-info">
                     <h3>{totalUnits}</h3>
                     <p>Total Units</p>
@@ -313,14 +283,14 @@ const Dashboard = () => {
                   </div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-icon revenue">💰</div>
+                  <div className="stat-icon revenue"><MdAttachMoney /></div>
                   <div className="stat-info">
                     <h3>${totalRevenue.toLocaleString()}</h3>
                     <p>Monthly Revenue</p>
                   </div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-icon occupancy">📊</div>
+                  <div className="stat-icon occupancy"><MdBarChart /></div>
                   <div className="stat-info">
                     <h3>{occupancyRate}%</h3>
                     <p>Occupancy Rate</p>
@@ -328,7 +298,6 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* Recent Activity & Quick Actions */}
               <div className="dashboard-grid">
                 <div className="dashboard-card">
                   <div className="card-header">
@@ -358,14 +327,14 @@ const Dashboard = () => {
                                   onClick={() => handleEditProperty(property)}
                                   title="Edit Property"
                                 >
-                                  ✏️
+                                  <MdEdit />
                                 </button>
                                 <button 
                                   className="btn-delete" 
                                   onClick={() => handleDeleteProperty(property.id, property.name)}
                                   title="Delete Property"
                                 >
-                                  🗑️
+                                  <MdDelete />
                                 </button>
                               </div>
                             </div>
@@ -373,11 +342,11 @@ const Dashboard = () => {
                         ))
                       ) : (
                         <div className="empty-state">
-                          <div className="empty-icon">🏢</div>
+                          <div className="empty-icon"><MdBusiness /></div>
                           <h4>No properties yet</h4>
                           <p>Click "Add Property" to get started</p>
                           <button className="btn btn-primary" onClick={handleOpenPropertyModal}>
-                            <span>➕</span>
+                            <MdAdd style={{ marginRight: '8px' }} />
                             Add Your First Property
                           </button>
                         </div>
@@ -395,7 +364,7 @@ const Dashboard = () => {
                     {properties.length > 0 ? (
                       <div className="insights-list">
                         <div className="insight-item">
-                          <div className="insight-icon">📊</div>
+                          <div className="insight-icon"><MdBarChart /></div>
                           <div className="insight-details">
                             <p><strong>Portfolio Overview</strong></p>
                             <span className="insight-description">{totalProperties} properties with {totalUnits} total units</span>
@@ -404,7 +373,7 @@ const Dashboard = () => {
                         
                         {occupancyRate > 0 && (
                           <div className="insight-item">
-                            <div className="insight-icon">🏠</div>
+                            <div className="insight-icon"><MdHome /></div>
                             <div className="insight-details">
                               <p><strong>Occupancy Status</strong></p>
                               <span className="insight-description">{occupiedUnits} of {totalUnits} units occupied ({occupancyRate}%)</span>
@@ -414,7 +383,7 @@ const Dashboard = () => {
                         
                         {totalRevenue > 0 && (
                           <div className="insight-item">
-                            <div className="insight-icon">💰</div>
+                            <div className="insight-icon"><MdAttachMoney /></div>
                             <div className="insight-details">
                               <p><strong>Revenue Stream</strong></p>
                               <span className="insight-description">${totalRevenue.toLocaleString()} monthly income potential</span>
@@ -424,7 +393,7 @@ const Dashboard = () => {
                         
                         {properties.length > 0 && (
                           <div className="insight-item">
-                            <div className="insight-icon">📈</div>
+                            <div className="insight-icon"><MdTrendingUp /></div>
                             <div className="insight-details">
                               <p><strong>Portfolio Growth</strong></p>
                               <span className="insight-description">Recently added: {properties[properties.length - 1]?.name || 'No properties yet'}</span>
@@ -434,7 +403,7 @@ const Dashboard = () => {
                       </div>
                     ) : (
                       <div className="empty-insights">
-                        <div className="empty-icon">📊</div>
+                        <div className="empty-icon"><MdBarChart /></div>
                         <h4>No insights yet</h4>
                         <p>Add your first property to see portfolio insights and analytics</p>
                       </div>
@@ -455,7 +424,7 @@ const Dashboard = () => {
                       <p>Manage all your properties and units in one place</p>
                     </div>
                     <button className="btn btn-primary" onClick={handleOpenPropertyModal}>
-                      <span>➕</span>
+                      <MdAdd style={{ marginRight: '8px' }} />
                       Add Property
                     </button>
                   </div>
@@ -464,7 +433,6 @@ const Dashboard = () => {
                     <div className="properties-expandable-list">
                       {properties.map((property) => (
                         <div key={property.id} className="property-expandable-card">
-                          {/* Property Header */}
                           <div 
                             className="property-expandable-header"
                             onClick={() => togglePropertyExpansion(property.id)}
@@ -490,19 +458,18 @@ const Dashboard = () => {
                                 onClick={() => handleEditProperty(property)}
                                 title="Edit Property"
                               >
-                                ✏️
+                                <MdEdit />
                               </button>
                               <button 
                                 className="btn-icon btn-danger" 
                                 onClick={() => handleDeleteProperty(property.id, property.name)}
                                 title="Delete Property"
                               >
-                                🗑️
+                                <MdDelete />
                               </button>
                             </div>
                           </div>
                           
-                          {/* Expandable Units Section */}
                           {expandedProperties.has(property.id) && (
                             <div className="property-units-expanded">
                               <div className="units-grid">
@@ -522,31 +489,12 @@ const Dashboard = () => {
                                         )}
                                       </div>
                                     </div>
-                                    <div className="unit-card-body">
-                                      <div className="unit-specs">
-                                        <span>{unit.bedrooms}BR • {unit.bathrooms}BA</span>
-                                        {unit.squareFeet && <span>{unit.squareFeet} sq ft</span>}
-                                      </div>
-                                      <div className="unit-rent-display">${unit.rent}/mo</div>
-                                      <div className="unit-tenant-preview">
-                                        {unit.tenant ? (
-                                          <span className="tenant-name-preview">{unit.tenant.name}</span>
-                                        ) : (
-                                          <span className="vacant-preview">Vacant</span>
-                                        )}
-                                      </div>
-                                      
-                                      {/* Rent Payment Button */}
-                                      {unit.tenant && (
-                                        <button
-                                          className={`rent-payment-button ${unit.rentPaid ? 'paid' : 'unpaid'}`}
-                                          onClick={(e) => handleRentPaymentToggle(property.id, unit.id, unit.rentPaid || false, e)}
-                                        >
-                                          <span className="rent-payment-text">
-                                            {unit.rentPaid ? '✓ Rent Paid' : '✗ Rent Unpaid'}
-                                          </span>
-                                        </button>
-                                      )}
+                                    <div className="unit-details-preview">
+                                      <p className="unit-specs">{unit.bedrooms}BR • {unit.bathrooms}BA</p>
+                                      <p className="unit-rent">${(unit.rent || 0).toLocaleString()}/mo</p>
+                                      <p className="unit-tenant-status">
+                                        {unit.tenant ? unit.tenant.name : 'Vacant'}
+                                      </p>
                                     </div>
                                   </div>
                                 ))}
@@ -558,80 +506,61 @@ const Dashboard = () => {
                     </div>
                   ) : (
                     <div className="empty-state-large">
-                      <div className="empty-icon">🏢</div>
+                      <div className="empty-icon"><MdBusiness /></div>
                       <h3>No Properties Yet</h3>
                       <p>Start building your property portfolio by adding your first property</p>
                       <button className="btn btn-primary" onClick={handleOpenPropertyModal}>
-                        <span>➕</span>
+                        <MdAdd style={{ marginRight: '8px' }} />
                         Add Your First Property
                       </button>
                     </div>
                   )}
                   
-                  {/* Unit Details Panel */}
                   {selectedUnit && (
                     <div className="unit-details-panel">
                       <div className="unit-details-overlay" onClick={closeUnitDetails}></div>
                       <div className="unit-details-content">
                         <div className="unit-details-header">
-                          <h3>Unit #{selectedUnit.number} Details</h3>
-                          <button className="btn-close" onClick={closeUnitDetails}>×</button>
+                          <h3>Unit #{selectedUnit.number}</h3>
+                          <button className="close-unit-details" onClick={closeUnitDetails}>×</button>
                         </div>
+                        
                         <div className="unit-details-body">
-                          <div className="unit-property-info">
-                            <h4>📍 {selectedUnit.propertyName}</h4>
-                            <p>{selectedUnit.propertyAddress}</p>
-                          </div>
-                          
-                          <div className="unit-specifications">
-                            <h4>Unit Specifications</h4>
-                            <div className="spec-grid">
-                              <div className="spec-item">
-                                <label>Bedrooms</label>
-                                <span>{selectedUnit.bedrooms}</span>
-                              </div>
-                              <div className="spec-item">
-                                <label>Bathrooms</label>
-                                <span>{selectedUnit.bathrooms}</span>
-                              </div>
-                              <div className="spec-item">
-                                <label>Square Feet</label>
-                                <span>{selectedUnit.squareFeet || 'Not specified'}</span>
-                              </div>
-                              <div className="spec-item">
-                                <label>Monthly Rent</label>
-                                <span className="rent-highlight">${selectedUnit.rent}</span>
-                              </div>
-                              {selectedUnit.tenant && (
-                                <div className="spec-item">
-                                  <label>Rent Payment Status</label>
-                                  <span className={`payment-status ${selectedUnit.rentPaid ? 'paid' : 'unpaid'}`}>
-                                    {selectedUnit.rentPaid ? '✓ Paid' : '✗ Unpaid'}
-                                  </span>
-                                </div>
-                              )}
+                          <div className="unit-specs-detailed">
+                            <div className="spec-item">
+                              <span className="spec-label">Bedrooms:</span>
+                              <span className="spec-value">{selectedUnit.bedrooms}</span>
+                            </div>
+                            <div className="spec-item">
+                              <span className="spec-label">Bathrooms:</span>
+                              <span className="spec-value">{selectedUnit.bathrooms}</span>
+                            </div>
+                            <div className="spec-item">
+                              <span className="spec-label">Square Feet:</span>
+                              <span className="spec-value">{selectedUnit.squareFeet} sq ft</span>
+                            </div>
+                            <div className="spec-item">
+                              <span className="spec-label">Monthly Rent:</span>
+                              <span className="spec-value rent-amount">${(selectedUnit.rent || 0).toLocaleString()}</span>
                             </div>
                           </div>
                           
-                          <div className="unit-tenant-info">
+                          <div className="tenant-section">
                             <h4>Tenant Information</h4>
                             {selectedUnit.tenant ? (
-                              <div className="tenant-details">
-                                <div className="tenant-avatar-large">
-                                  <span>{selectedUnit.tenant.name.charAt(0).toUpperCase()}</span>
-                                </div>
+                              <div className="tenant-info-card">
                                 <div className="tenant-info-detailed">
                                   <h5>{selectedUnit.tenant.name}</h5>
                                   <div className="tenant-contact-details">
                                     {selectedUnit.tenant.email && (
                                       <div className="contact-item">
-                                        <span className="contact-icon">📧</span>
+                                        <MdEmail className="contact-icon" />
                                         <span>{selectedUnit.tenant.email}</span>
                                       </div>
                                     )}
                                     {selectedUnit.tenant.phone && (
                                       <div className="contact-item">
-                                        <span className="contact-icon">📞</span>
+                                        <MdPhone className="contact-icon" />
                                         <span>{selectedUnit.tenant.phone}</span>
                                       </div>
                                     )}
@@ -639,7 +568,7 @@ const Dashboard = () => {
                                   {selectedUnit.tenant.leaseStart && selectedUnit.tenant.leaseEnd && (
                                     <div className="lease-info">
                                       <div className="lease-dates">
-                                        <span className="lease-icon">📅</span>
+                                        <MdCalendarToday className="lease-icon" />
                                         <span>
                                           {new Date(selectedUnit.tenant.leaseStart).toLocaleDateString()} - 
                                           {new Date(selectedUnit.tenant.leaseEnd).toLocaleDateString()}
@@ -651,10 +580,10 @@ const Dashboard = () => {
                               </div>
                             ) : (
                               <div className="vacant-unit-info">
-                                <div className="vacant-icon">🏠</div>
+                                <div className="vacant-icon"><MdHome /></div>
                                 <p>This unit is currently vacant</p>
                                 <button className="btn btn-secondary">
-                                  <span>👤</span>
+                                  <MdPerson style={{ marginRight: '8px' }} />
                                   Add Tenant
                                 </button>
                               </div>
@@ -677,11 +606,10 @@ const Dashboard = () => {
                   </div>
                   
                   <div className="settings-content">
-                    {/* Appearance Settings */}
                     <div className="settings-section">
                       <div className="settings-card">
                         <div className="settings-card-header">
-                          <div className="settings-icon">🎨</div>
+                          <div className="settings-icon"><MdPalette /></div>
                           <div className="settings-info">
                             <h3>Appearance</h3>
                             <p>Customize the look and feel of your dashboard</p>
@@ -700,14 +628,14 @@ const Dashboard = () => {
                                   className={`theme-option ${!isDarkMode ? 'active' : ''}`}
                                   onClick={() => isDarkMode && toggleDarkMode()}
                                 >
-                                  <span>☀️</span>
+                                  <MdWbSunny />
                                   Light
                                 </button>
                                 <button 
                                   className={`theme-option ${isDarkMode ? 'active' : ''}`}
                                   onClick={() => !isDarkMode && toggleDarkMode()}
                                 >
-                                  <span>🌙</span>
+                                  <MdNightsStay />
                                   Dark
                                 </button>
                               </div>
@@ -717,11 +645,10 @@ const Dashboard = () => {
                       </div>
                     </div>
 
-                    {/* System Settings */}
                     <div className="settings-section">
                       <div className="settings-card">
                         <div className="settings-card-header">
-                          <div className="settings-icon">⚙️</div>
+                          <div className="settings-icon"><MdSettings /></div>
                           <div className="settings-info">
                             <h3>System</h3>
                             <p>General application settings</p>
@@ -736,7 +663,7 @@ const Dashboard = () => {
                             </div>
                             <div className="setting-control">
                               <button className="btn btn-secondary">
-                                <span>💾</span>
+                                <MdSave style={{ marginRight: '8px' }} />
                                 Export Data
                               </button>
                             </div>
@@ -749,7 +676,7 @@ const Dashboard = () => {
                             </div>
                             <div className="setting-control">
                               <button className="btn btn-danger">
-                                <span>🗑️</span>
+                                <MdDelete style={{ marginRight: '8px' }} />
                                 Reset All Data
                               </button>
                             </div>
@@ -758,11 +685,10 @@ const Dashboard = () => {
                       </div>
                     </div>
 
-                    {/* Account Settings */}
                     <div className="settings-section">
                       <div className="settings-card">
                         <div className="settings-card-header">
-                          <div className="settings-icon">👤</div>
+                          <div className="settings-icon"><MdAccountCircle /></div>
                           <div className="settings-info">
                             <h3>Account</h3>
                             <p>Manage your account preferences</p>
@@ -798,7 +724,7 @@ const Dashboard = () => {
 
               {!['properties', 'settings'].includes(activeTab) && (
                 <div className="coming-soon">
-                  <div className="coming-soon-icon">🚧</div>
+                  <div className="coming-soon-icon"><MdConstruction /></div>
                   <h2>Coming Soon</h2>
                   <p>The {activeTab} section is currently under development.</p>
                   <p>This will include comprehensive tools for managing your {activeTab}.</p>
@@ -809,7 +735,6 @@ const Dashboard = () => {
         </div>
       </main>
 
-      {/* Property Modal */}
       <PropertyModal 
         isOpen={isPropertyModalOpen}
         onClose={handleClosePropertyModal}
@@ -817,14 +742,12 @@ const Dashboard = () => {
         editingProperty={editingProperty}
       />
 
-      {/* CSV Upload Modal */}
       <CSVUpload 
         isOpen={isCSVUploadOpen}
         onClose={handleCloseCSVUpload}
         onDataParsed={handleCSVDataParsed}
       />
 
-      {/* Chatbot Component */}
       <Chatbot 
         isOpen={isChatbotOpen}
         onClose={() => setIsChatbotOpen(false)}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Papa from 'papaparse';
+import { MdUploadFile } from 'react-icons/md';
 import './CSVUpload.css';
 
 const CSVUpload = ({ isOpen, onClose, onDataParsed }) => {
@@ -383,7 +384,7 @@ const CSVUpload = ({ isOpen, onClose, onDataParsed }) => {
                   className="file-input"
                 />
                 <label htmlFor="csv-file" className="file-label">
-                  <span className="upload-icon">📁</span>
+                  <MdUploadFile className="upload-icon" />
                   {file ? file.name : 'Choose CSV File'}
                 </label>
               </div>

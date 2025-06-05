@@ -1,10 +1,12 @@
 # EstateFlow Chatbot Backend
 
-An AI-powered chatbot backend for the EstateFlow property management application. This Flask-based API integrates with OpenAI's GPT-4o-mini model to provide intelligent property portfolio analysis and insights.
+An AI-powered chatbot backend for the EstateFlow property management application. This Flask-based API integrates with OpenAI's GPT-4o-mini model to provide intelligent property portfolio analysis and includes automated email notifications for rent management.
 
 ## Features
 
 - **AI-Powered Analysis**: Uses OpenAI's GPT-4o-mini for intelligent property data analysis
+- **Automated Email Notifications**: Sends overdue rent notifications and tenant reminders
+- **Scheduled Rent Checks**: Daily automated rent monitoring with configurable grace periods
 - **Property Portfolio Insights**: Analyzes occupancy rates, revenue, tenant information, and more
 - **Fallback Responses**: Provides meaningful insights even when AI API is unavailable
 - **RESTful API**: Easy integration with frontend applications
@@ -17,6 +19,7 @@ An AI-powered chatbot backend for the EstateFlow property management application
 - Python 3.8+
 - pip package manager
 - OpenAI API key (get one at https://platform.openai.com/api-keys)
+- Gmail account with App Password for email notifications
 
 ### Installation
 
@@ -30,12 +33,21 @@ An AI-powered chatbot backend for the EstateFlow property management application
    cp env.example .env
    ```
    
-   Edit the `.env` file and add your OpenAI API key:
+   Edit the `.env` file and add your configuration:
    ```
    OPENAI_API_KEY=your_openai_api_key_here
+   SENDER_EMAIL=your_sender_email@gmail.com
+   SENDER_PASSWORD=your_gmail_app_password
+   LANDLORD_EMAIL=your_landlord_email@gmail.com
    ```
 
-3. **Run the server:**
+3. **Configure Gmail App Password** (required for email features):
+   - Go to https://myaccount.google.com/
+   - Enable 2-Step Verification
+   - Generate App Password for Mail
+   - Use the 16-character app password in SENDER_PASSWORD
+
+4. **Run the server:**
    ```bash
    python app.py
    ```
@@ -95,6 +107,77 @@ Health check endpoint to verify the service is running.
 {
   "status": "healthy",
   "message": "Chatbot backend is running"
+}
+```
+
+### Email Automation Endpoints
+
+#### POST /scheduler/start
+Start the automated rent scheduler.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Rent scheduler started successfully"
+}
+```
+
+#### POST /scheduler/stop
+Stop the automated rent scheduler.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Rent scheduler stopped successfully"
+}
+```
+
+#### GET /scheduler/status
+Get current scheduler status and configuration.
+
+**Response:**
+```json
+{
+  "success": true,
+  "status": {
+    "running": true,
+    "check_time": "09:00",
+    "grace_period_days": 3,
+    "reminder_days_before": [3, 1],
+    "next_run": "2025-05-31 09:00:00",
+    "scheduled_jobs": 1
+  }
+}
+```
+
+#### POST /scheduler/manual-check
+Manually trigger a rent check (useful for testing).
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Manual rent check completed"
+}
+```
+
+#### POST /email/test
+Send a test email to verify email configuration.
+
+**Request:**
+```json
+{
+  "email": "test@example.com"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Test email sent successfully to test@example.com"
 }
 ```
 

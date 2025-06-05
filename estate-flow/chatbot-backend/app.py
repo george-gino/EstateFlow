@@ -5,6 +5,9 @@ import os
 from dotenv import load_dotenv
 import json
 import logging
+from datetime import datetime
+from scheduler_service import start_rent_scheduler, stop_rent_scheduler, manual_rent_check, get_scheduler_status
+from email_service import email_service
 
 # Load environment variables
 load_dotenv()
@@ -489,8 +492,131 @@ def root():
         'endpoints': {
             '/chat': 'POST - Send messages to the AI assistant',
             '/health': 'GET - Health check',
+            '/scheduler/start': 'POST - Start automated rent scheduler',
+            '/scheduler/stop': 'POST - Stop automated rent scheduler',
+            '/scheduler/status': 'GET - Get scheduler status',
+            '/scheduler/manual-check': 'POST - Manually trigger rent check',
+            '/email/test': 'POST - Send test email'
         }
     })
+
+# Email Scheduler Endpoints
+@app.route('/scheduler/start', methods=['POST'])
+def start_scheduler():
+    """Start the automated rent scheduler"""
+    try:
+        start_rent_scheduler()
+        return jsonify({
+            'success': True,
+            'message': 'Rent scheduler started successfully'
+        })
+    except Exception as e:
+        logger.error(f"Error starting scheduler: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/scheduler/stop', methods=['POST'])
+def stop_scheduler():
+    """Stop the automated rent scheduler"""
+    try:
+        stop_rent_scheduler()
+        return jsonify({
+            'success': True,
+            'message': 'Rent scheduler stopped successfully'
+        })
+    except Exception as e:
+        logger.error(f"Error stopping scheduler: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/scheduler/status', methods=['GET'])
+def scheduler_status():
+    """Get current scheduler status"""
+    try:
+        status = get_scheduler_status()
+        return jsonify({
+            'success': True,
+            'status': status
+        })
+    except Exception as e:
+        logger.error(f"Error getting scheduler status: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/scheduler/manual-check', methods=['POST'])
+def manual_check():
+    """Manually trigger a rent check"""
+    try:
+        manual_rent_check()
+        return jsonify({
+            'success': True,
+            'message': 'Manual rent check completed'
+        })
+    except Exception as e:
+        logger.error(f"Error running manual check: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/email/test', methods=['POST'])
+def test_email():
+    """Send a test email to verify email configuration"""
+    try:
+        data = request.get_json()
+        test_email_address = data.get('email', os.getenv('LANDLORD_EMAIL'))
+        
+        if not test_email_address:
+            return jsonify({
+                'success': False,
+                'error': 'No email address provided and LANDLORD_EMAIL not configured'
+            }), 400
+        
+        subject = "EstateFlow Email Test"
+        current_time = datetime.now().strftime('%B %d, %Y at %I:%M %p')
+        body = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; margin: 20px;">
+            <h2 style="color: #3498db;">Email Configuration Test</h2>
+            <p>Congratulations! Your EstateFlow email system is working correctly.</p>
+            <p>This test email confirms that:</p>
+            <ul>
+                <li>SMTP configuration is correct</li>
+                <li>Email credentials are valid</li>
+                <li>Email service is ready for automated notifications</li>
+            </ul>
+            <p style="color: #666; font-size: 12px; margin-top: 30px;">
+                Sent at: {current_time}
+            </p>
+        </body>
+        </html>
+        """
+        
+        success = email_service.send_email(test_email_address, subject, body, is_html=True)
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': f'Test email sent successfully to {test_email_address}'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Failed to send test email'
+            }), 500
+            
+    except Exception as e:
+        logger.error(f"Error sending test email: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 if __name__ == '__main__':
     # Check if OpenAI API key is set

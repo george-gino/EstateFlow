@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { MdSmartToy, MdSend } from 'react-icons/md';
+import { AiOutlineLoading3Quarters } from 'react-icons/ai';
 import './Chatbot.css';
 
 const Chatbot = ({ isOpen, onClose, properties }) => {
@@ -133,7 +135,7 @@ const Chatbot = ({ isOpen, onClose, properties }) => {
     <div className="chatbot-panel">
       <div className="chatbot-header">
         <div className="chatbot-title">
-          <span className="chatbot-icon">🤖</span>
+          <MdSmartToy className="chatbot-icon" />
           <div>
             <h3>AI Property Assistant</h3>
             <span className="chatbot-status">
@@ -203,11 +205,16 @@ const Chatbot = ({ isOpen, onClose, properties }) => {
             disabled={isLoading}
           />
           <button
-            onClick={sendMessage}
-            disabled={!inputMessage.trim() || isLoading}
+            type="submit"
             className="send-button"
+            disabled={!inputMessage.trim() || isLoading}
+            title="Send message"
           >
-            {isLoading ? '⏳' : '📤'}
+            {isLoading ? (
+              <AiOutlineLoading3Quarters className="loading-icon" />
+            ) : (
+              <MdSend />
+            )}
           </button>
         </div>
         <div className="input-hint">
