@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../supabaseClient';
 import './HomePage.css';
 
 const HomePage = () => {
@@ -8,6 +9,40 @@ const HomePage = () => {
   const handleGetStarted = () => {
     navigate('/dashboard');
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data, error } = await supabase
+        .from('Properties')
+        .select('*');
+
+      if (error) {
+        console.log(error.message);
+      } else {
+        console.log(data);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        const { data, error } = await supabase.from('Properties').select('*');
+        if (error) {
+          console.log('Failed to connect to the database:', error.message);
+        } else {
+          console.log('Database connected');
+        }
+      } catch (err) {
+        console.log('Failed to connect to the database:', err.message);
+      }
+    };
+
+    console.log('Attempting to connect to the database...');
+    checkConnection();
+  }, []);
 
   return (
     <div className="homepage">
@@ -19,7 +54,6 @@ const HomePage = () => {
               <h2>EstateFlow</h2>
             </div>
             <nav className="nav-links">
-              <a href="#features">Features</a>
               <a href="#pricing">Pricing</a>
               <a href="#contact">Contact</a>
               <button className="btn btn-primary" onClick={handleGetStarted}>Get Started</button>
@@ -116,7 +150,9 @@ const HomePage = () => {
               <p>Handle maintenance requests efficiently with automated workflows and real-time updates.</p>
             </div>
             <div className="feature-card">
-              <div className="icon payments-icon"></div>
+              <div className="feature-icon">
+                <div className="icon payments-icon"></div>
+              </div>
               <h3>Payment Processing</h3>
               <p>Collect rent online, track payments, and send automated reminders to reduce late payments.</p>
             </div>
@@ -177,6 +213,42 @@ const HomePage = () => {
           </div>
         </div>
       </footer>
+
+      {/* TestSupabase Component */}
+      <TestSupabase />
+    </div>
+  );
+};
+
+const TestSupabase = () => {
+  const [data, setData] = useState([]);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data, error } = await supabase
+        .from('Properties')
+        .select('*');
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setData(data);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  return (
+    <div>
+      <h1>Supabase Data</h1>
+      {error && <p>Error: {error}</p>}
+      <ul>
+        {data.map((item) => (
+          <li key={item.id}>{JSON.stringify(item)}</li>
+        ))}
+      </ul>
     </div>
   );
 };
