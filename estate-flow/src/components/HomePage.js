@@ -13,7 +13,7 @@ const HomePage = () => {
   useEffect(() => {
     const fetchData = async () => {
       const { data, error } = await supabase
-        .from('Properties')
+        .from('properties')
         .select('*');
 
       if (error) {
@@ -29,7 +29,7 @@ const HomePage = () => {
   useEffect(() => {
     const checkConnection = async () => {
       try {
-        const { data, error } = await supabase.from('Properties').select('*');
+        const { error } = await supabase.from('properties').select('*');
         if (error) {
           console.log('Failed to connect to the database:', error.message);
         } else {
@@ -227,7 +227,7 @@ const TestSupabase = () => {
   useEffect(() => {
     const fetchData = async () => {
       const { data, error } = await supabase
-        .from('Properties')
+        .from('properties')
         .select('*');
 
       if (error) {

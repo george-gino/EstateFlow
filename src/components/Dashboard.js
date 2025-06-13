@@ -1,38 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  
-  MdBusiness, 
-  MdSmartToy, 
-  MdSettings, 
-  MdEdit, 
-  MdDelete, 
-  MdEmail, 
-  MdPhone, 
-  MdCalendarToday, 
-  MdHome, 
-  MdPerson, 
-  MdBarChart, 
-  MdLogout, 
-  MdSave, 
-  MdWbSunny, 
-  MdAdd,
+  MdBarChart,
+  MdBusiness,
   MdBuild,
   MdPayment,
   MdTrendingUp,
+  MdSmartToy,
+  MdSettings,
+  MdLogout,
+  MdGroup,
+  MdAttachMoney,
+  MdHome,
+  MdPerson,
+  MdEdit,
+  MdDelete,
+  MdAdd,
   MdFolder,
-  
+  MdEmail,
+  MdPhone,
+  MdCalendarToday,
   MdPalette,
+  MdWbSunny,
+  MdNightsStay,
   MdAccountCircle,
   MdConstruction,
-  MdNightsStay,
-  MdGroup,
-  MdAttachMoney
+  MdSave
 } from 'react-icons/md';
 import './Dashboard.css';
 import PropertyModal from './PropertyModal';
 import CSVUpload from './CSVUpload';
 import Chatbot from './Chatbot';
+import DebugDatabase from './DebugDatabase';
+import { propertyService, transformSupabaseData, csvImportService } from '../services/databaseService';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -45,6 +45,7 @@ const Dashboard = () => {
   const [expandedProperties, setExpandedProperties] = useState(new Set());
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Load dark mode preference from localStorage on mount
   useEffect(() => {
@@ -64,6 +65,26 @@ const Dashboard = () => {
     
     document.documentElement.setAttribute('data-theme', themeValue);
     localStorage.setItem('estateflow-theme', themeValue);
+  };
+
+  // Load properties from Supabase on mount
+  useEffect(() => {
+    loadProperties();
+  }, []);
+
+  // Load properties from database
+  const loadProperties = async () => {
+    try {
+      setIsLoading(true);
+      const supabaseProperties = await propertyService.getAll();
+      const transformedProperties = transformSupabaseData(supabaseProperties);
+      setProperties(transformedProperties);
+    } catch (error) {
+      console.error('Error loading properties:', error);
+      // You might want to show a toast notification here
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Calculate dynamic stats from actual properties
@@ -94,10 +115,24 @@ const Dashboard = () => {
     setIsCSVUploadOpen(false);
   };
 
-  const handleCSVDataParsed = (parsedData) => {
-    console.log('CSV data parsed:', parsedData);
-    setProperties(prev => [...prev, ...parsedData]);
-    setIsCSVUploadOpen(false);
+  const handleCSVDataParsed = async (parsedData) => {
+    try {
+      console.log('CSV data parsed:', parsedData);
+      setIsLoading(true);
+      
+      // Import data to Supabase
+      await csvImportService.importProperties(parsedData);
+      
+      // Reload properties from database
+      await loadProperties();
+      
+      setIsCSVUploadOpen(false);
+    } catch (error) {
+      console.error('Error importing CSV data:', error);
+      alert('Error importing CSV data. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleClosePropertyModal = () => {
@@ -110,33 +145,41 @@ const Dashboard = () => {
     setIsPropertyModalOpen(true);
   };
 
-  const handleDeleteProperty = (propertyId, propertyName) => {
+  const handleDeleteProperty = async (propertyId, propertyName) => {
     if (window.confirm(`Are you sure you want to delete "${propertyName}"? This action cannot be undone.`)) {
-      setProperties(prev => prev.filter(property => property.id !== propertyId));
+      try {
+        setIsLoading(true);
+        await propertyService.delete(propertyId);
+        await loadProperties(); // Reload properties after deletion
+      } catch (error) {
+        console.error('Error deleting property:', error);
+        alert('Error deleting property. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
-  const handleSaveProperty = (propertyData) => {
-    if (editingProperty) {
-      const updatedProperty = {
-        ...editingProperty,
-        ...propertyData,
-        id: editingProperty.id,
-        createdAt: editingProperty.createdAt,
-        updatedAt: new Date().toISOString()
-      };
+  const handleSaveProperty = async (propertyData) => {
+    try {
+      setIsLoading(true);
       
-      setProperties(prev => prev.map(property => 
-        property.id === editingProperty.id ? updatedProperty : property
-      ));
-    } else {
-      const newProperty = {
-        id: Date.now(),
-        ...propertyData,
-        createdAt: new Date().toISOString()
-      };
+      if (editingProperty) {
+        // Update existing property
+        await propertyService.update(editingProperty.id, propertyData);
+      } else {
+        // Create new property
+        await propertyService.create(propertyData);
+      }
       
-      setProperties(prev => [...prev, newProperty]);
+      // Reload properties after save
+      await loadProperties();
+      
+    } catch (error) {
+      console.error('Error saving property:', error);
+      alert('Error saving property. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -306,7 +349,12 @@ const Dashboard = () => {
                   </div>
                   <div className="card-content">
                     <div className="property-list">
-                      {properties.length > 0 ? (
+                      {isLoading ? (
+                        <div className="loading-state">
+                          <div className="loading-spinner"></div>
+                          <p>Loading properties...</p>
+                        </div>
+                      ) : properties.length > 0 ? (
                         properties.map((property) => (
                           <div key={property.id} className="property-item">
                             <div className="property-image-small"></div>
@@ -326,6 +374,7 @@ const Dashboard = () => {
                                   className="btn-edit" 
                                   onClick={() => handleEditProperty(property)}
                                   title="Edit Property"
+                                  disabled={isLoading}
                                 >
                                   <MdEdit />
                                 </button>
@@ -333,6 +382,7 @@ const Dashboard = () => {
                                   className="btn-delete" 
                                   onClick={() => handleDeleteProperty(property.id, property.name)}
                                   title="Delete Property"
+                                  disabled={isLoading}
                                 >
                                   <MdDelete />
                                 </button>
@@ -345,7 +395,7 @@ const Dashboard = () => {
                           <div className="empty-icon"><MdBusiness /></div>
                           <h4>No properties yet</h4>
                           <p>Click "Add Property" to get started</p>
-                          <button className="btn btn-primary" onClick={handleOpenPropertyModal}>
+                          <button className="btn btn-primary" onClick={handleOpenPropertyModal} disabled={isLoading}>
                             <MdAdd style={{ marginRight: '8px' }} />
                             Add Your First Property
                           </button>
@@ -429,7 +479,12 @@ const Dashboard = () => {
                     </button>
                   </div>
                   
-                  {properties.length > 0 ? (
+                  {isLoading ? (
+                    <div className="loading-state">
+                      <div className="loading-spinner"></div>
+                      <p>Loading properties...</p>
+                    </div>
+                  ) : properties.length > 0 ? (
                     <div className="properties-expandable-list">
                       {properties.map((property) => (
                         <div key={property.id} className="property-expandable-card">
@@ -457,6 +512,7 @@ const Dashboard = () => {
                                 className="btn-icon" 
                                 onClick={() => handleEditProperty(property)}
                                 title="Edit Property"
+                                disabled={isLoading}
                               >
                                 <MdEdit />
                               </button>
@@ -464,6 +520,7 @@ const Dashboard = () => {
                                 className="btn-icon btn-danger" 
                                 onClick={() => handleDeleteProperty(property.id, property.name)}
                                 title="Delete Property"
+                                disabled={isLoading}
                               >
                                 <MdDelete />
                               </button>
@@ -753,6 +810,22 @@ const Dashboard = () => {
         onClose={() => setIsChatbotOpen(false)}
         properties={properties}
       />
+
+      {/* Test visibility */}
+      <div style={{
+        position: 'fixed',
+        top: '10px',
+        left: '10px',
+        background: 'blue',
+        color: 'white',
+        padding: '10px',
+        zIndex: 99998,
+        borderRadius: '4px'
+      }}>
+        TEST VISIBLE
+      </div>
+
+      <DebugDatabase />
     </div>
   );
 };
